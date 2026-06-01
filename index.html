@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<!-- saved from url=(0057)file:///Users/mattblanchard/Downloads/bandmate-pro_5.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bandmate Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./Bandmate Pro v6_files/css2" rel="stylesheet">
+<script src="./Bandmate Pro v6_files/supabase.min.js"></script>
+<script src="./Bandmate Pro v6_files/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0e10;--bg2:#16161a;--bg3:#1e1e24;--bg4:#26262e;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0efe8;--text2:#a09e96;--text3:#6e6c66;
+  --accent:#e8c14a;--accent2:#c9a530;
+  --green:#4caf82;--blue:#4a9edd;--red:#e05252;--purple:#9b7fe8;
+  --font-head:'Bebas Neue',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --r:8px;--rl:12px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;min-height:100vh;overflow-x:hidden}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:16px;height:56px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--font-head);font-size:26px;letter-spacing:2px;color:var(--accent);flex-shrink:0;cursor:pointer}
+.logo span{color:var(--text2);font-size:14px;letter-spacing:1px;margin-left:4px;font-family:var(--font-body);font-weight:300}
+.sync-indicator{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);flex-shrink:0;margin-left:auto}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:background .4s}
+.sync-dot.live{background:var(--green)}.sync-dot.syncing{background:var(--accent)}.sync-dot.error{background:var(--red)}
+.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:6px 14px;border-radius:var(--r);border:1px solid transparent;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{background:var(--bg4);color:var(--accent);border-color:var(--border2)}
+.nav-btn .badge{background:var(--bg);color:var(--text3);border-radius:20px;padding:1px 6px;font-size:11px;font-family:var(--font-mono)}
+.nav-btn.active .badge{background:rgba(232,193,74,0.15);color:var(--accent)}
+.main{padding:20px;max-width:1100px;margin:0 auto}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+.section-title{font-family:var(--font-head);font-size:32px;letter-spacing:2px}
+.section-sub{color:var(--text3);font-size:12px;margin-top:2px}
+.btn{padding:7px 14px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--bg4)}
+.btn.primary{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent2)}
+.btn.danger{color:var(--red);border-color:rgba(224,82,82,0.3)}
+.btn.danger:hover{background:rgba(224,82,82,0.1)}
+.btn.small{padding:4px 10px;font-size:12px}
+.btn.icon-only{padding:6px 8px}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:7px 10px;font-family:var(--font-body);font-size:13px;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+select option{background:var(--bg3)}
+textarea{resize:vertical;min-height:80px;width:100%}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--font-head);font-size:22px;letter-spacing:1px;margin-bottom:20px}
+.form-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
+.form-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.songs-list{display:flex;flex-direction:column;gap:8px}
+.song-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.song-card:hover{border-color:var(--border2)}
+.drag-handle{color:var(--text3);cursor:grab;font-size:18px;flex-shrink:0;line-height:1}
+.song-num{font-family:var(--font-mono);font-size:11px;color:var(--text3);width:22px;text-align:right;flex-shrink:0}
+.song-info{flex:1;min-width:0}
+.song-title{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-artist{font-size:12px;color:var(--text2)}
+.song-meta{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.pill{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;font-family:var(--font-mono);white-space:nowrap}
+.pill.key{background:rgba(74,158,221,0.15);color:#6ab8f0;border:1px solid rgba(74,158,221,0.2)}
+.pill.singer{background:rgba(155,127,232,0.15);color:#b89ff0;border:1px solid rgba(155,127,232,0.2)}
+.pill.bpm{background:rgba(76,175,130,0.15);color:#6dd4a8;border:1px solid rgba(76,175,130,0.2)}
+.pill.has-chart{background:rgba(160,158,150,0.1);color:var(--text2);border:1px solid var(--border);font-size:10px}
+.status-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.status-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s}
+.status-tab:hover{background:var(--bg3)}
+.status-tab.active-all{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.status-tab.active-setlist{background:rgba(76,175,130,0.15);color:var(--green);border-color:rgba(76,175,130,0.3)}
+.status-tab.active-backup{background:rgba(74,158,221,0.15);color:var(--blue);border-color:rgba(74,158,221,0.3)}
+.status-tab.active-requests{background:rgba(232,193,74,0.15);color:var(--accent);border-color:rgba(232,193,74,0.3)}
+.filters{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filters input{flex:1;min-width:160px}
+.setlist-num{font-family:var(--font-mono);font-size:18px;color:var(--accent);width:28px;text-align:center;flex-shrink:0}
+.gigs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.gig-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.gig-card:hover{border-color:var(--border2)}
+.gig-date{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
+.gig-venue{font-weight:500;font-size:15px;margin-bottom:4px}
+.gig-detail{font-size:12px;color:var(--text2);margin-bottom:12px}
+.gig-footer{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.chord-viewer{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);min-height:420px;display:flex;flex-direction:column}
+.chord-nav{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.chord-content{flex:1;padding:24px;font-family:var(--font-mono);font-size:13px;line-height:1.8;white-space:pre-wrap;overflow-y:auto}
+.chord-file-display{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden}
+.chord-file-display img{max-width:100%;max-height:500px;border-radius:var(--r);object-fit:contain}
+.chord-file-display iframe{width:100%;height:560px;border:none;border-radius:var(--r);background:#fff}
+.chord-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:10px;padding:40px;text-align:center}
+.chord-empty svg{opacity:.4}
+.chord-progress{display:flex;gap:4px;flex-wrap:wrap}
+.chord-dot{width:8px;height:8px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);cursor:pointer;transition:all .15s}
+.chord-dot.active{background:var(--accent);border-color:var(--accent)}
+.chord-dot.has-chart{background:var(--bg3)}
+.chart-mode-tabs{display:flex;gap:3px;background:var(--bg3);border-radius:var(--r);padding:3px}
+.chart-mode-tab{padding:4px 12px;border-radius:6px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--font-body);font-weight:500;transition:all .15s}
+.chart-mode-tab.active{background:var(--bg4);color:var(--accent)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state svg{margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:14px;max-width:300px;margin:0 auto 16px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.key-group-header{font-family:var(--font-mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 0 6px;display:flex;align-items:center;gap:8px}
+.key-group-header::after{content:'';flex:1;height:1px;background:var(--border)}
+.drag-over{border:1px dashed var(--accent)!important;opacity:.7}
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+.member-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;display:flex;flex-direction:column;gap:10px}
+.member-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:22px;flex-shrink:0}
+.member-header{display:flex;align-items:center;gap:12px}
+.stat-pill{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-size:12px;color:var(--text2)}
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .15s;color:var(--text3)}
+.upload-zone:hover{border-color:var(--accent);color:var(--text2)}
+.upload-zone.has-file{border-style:solid;border-color:var(--green);padding:10px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border2);color:var(--text);padding:10px 16px;border-radius:var(--r);font-size:13px;z-index:9999;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:var(--text3)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1.2s linear infinite;display:inline-block}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo" onclick="navigate(&#39;songs&#39;)">🎸 BANDMATE <span>PRO</span></div>
+  <nav class="nav" id="nav">
+    <button class="nav-btn active" onclick="navigate(&#39;songs&#39;)">
+      🎵 Songs <span class="badge">22</span>
+    </button>
+    <button class="nav-btn " onclick="navigate(&#39;setlist&#39;)">
+      📋 Set List <span class="badge">22</span>
+    </button>
+    <button class="nav-btn " onclick="navigate(&#39;chords&#39;)">
+      📄 Charts <span class="badge">1</span>
+    </button>
+    <button class="nav-btn " onclick="navigate(&#39;schedule&#39;)">
+      📅 Schedule <span class="badge">0</span>
+    </button>
+    <button class="nav-btn " onclick="navigate(&#39;members&#39;)">
+      👥 Band <span class="badge">3</span>
+    </button></nav>
+  <div class="sync-indicator">
+    <div class="sync-dot live" id="sync-dot"></div>
+    <span id="sync-label">Live</span>
+  </div>
+</div>
+<div class="main" id="app"><div class="section-head"><div><div class="section-title">SONGS</div><div class="section-sub">22 songs total</div></div><button class="btn primary" onclick="openModal()">+ Add Song</button></div><div class="status-tabs"><button class="status-tab active-all" onclick="setSongTab(&#39;all&#39;)">All <span style="font-size:10px;opacity:.6">22</span></button><button class="status-tab " onclick="setSongTab(&#39;setlist&#39;)">Set List <span style="font-size:10px;opacity:.6">22</span></button><button class="status-tab " onclick="setSongTab(&#39;backup&#39;)">Backup <span style="font-size:10px;opacity:.6">0</span></button><button class="status-tab " onclick="setSongTab(&#39;requests&#39;)">Requests <span style="font-size:10px;opacity:.6">0</span></button></div><div class="filters"><input type="text" placeholder="Search..." value="" oninput="state.searchQ=this.value;render()" style="min-width:160px"><select onchange="state.filterKey=this.value;render()"><option value="">All keys</option><option value="A">A</option><option value="Ab">Ab</option><option value="Am">Am</option><option value="B">B</option><option value="Bb">Bb</option><option value="C">C</option><option value="C (Capo 1)">C (Capo 1)</option><option value="C (Capo 6)">C (Capo 6)</option><option value="C#">C#</option><option value="D">D</option><option value="E (Capo 2)">E (Capo 2)</option><option value="E (Capo 4, C shape)">E (Capo 4, C shape)</option><option value="F#">F#</option><option value="G">G</option></select><select onchange="state.filterSinger=this.value;render()"><option value="">All singers</option><option value="Matt">Matt</option></select><select onchange="state.sortBy=this.value;render()"><option value="order" selected="">Sort: Default</option><option value="key">Sort: Key</option><option value="title">Sort: A–Z</option><option value="singer">Sort: Singer</option><option value="bpm">Sort: BPM</option></select></div><div class="songs-list"><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s001&#39;)" ondragover="dragOver(event,&#39;s001&#39;)" ondrop="dropSong(event,&#39;s001&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">1</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Waiting on the World to Change</div><div class="song-artist">John Mayer</div></div><div class="song-meta"><span class="pill key">B</span><span class="pill singer">Matt</span><span class="pill has-chart">♪</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s001&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s001&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s002&#39;)" ondragover="dragOver(event,&#39;s002&#39;)" ondrop="dropSong(event,&#39;s002&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">2</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Too Close</div><div class="song-artist">Alex Clare</div></div><div class="song-meta"><span class="pill key">D</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s002&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s002&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s003&#39;)" ondragover="dragOver(event,&#39;s003&#39;)" ondrop="dropSong(event,&#39;s003&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">3</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Tennessee Whiskey</div><div class="song-artist">Chris Stapleton</div></div><div class="song-meta"><span class="pill key">G</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s003&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s003&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s004&#39;)" ondragover="dragOver(event,&#39;s004&#39;)" ondrop="dropSong(event,&#39;s004&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">4</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Wagon Wheel</div><div class="song-artist">Darius Rucker</div></div><div class="song-meta"><span class="pill key">A</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s004&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s004&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s005&#39;)" ondragover="dragOver(event,&#39;s005&#39;)" ondrop="dropSong(event,&#39;s005&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">5</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Use Somebody</div><div class="song-artist">Kings of Leon</div></div><div class="song-meta"><span class="pill key">A</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s005&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s005&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s006&#39;)" ondragover="dragOver(event,&#39;s006&#39;)" ondrop="dropSong(event,&#39;s006&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">6</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">My Girl</div><div class="song-artist">The Temptations</div></div><div class="song-meta"><span class="pill key">C</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s006&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s006&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s007&#39;)" ondragover="dragOver(event,&#39;s007&#39;)" ondrop="dropSong(event,&#39;s007&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">7</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Free</div><div class="song-artist">Zac Brown Band</div></div><div class="song-meta"><span class="pill key">C#</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s007&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s007&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s008&#39;)" ondragover="dragOver(event,&#39;s008&#39;)" ondrop="dropSong(event,&#39;s008&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">8</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Drops of Jupiter</div><div class="song-artist">Train</div></div><div class="song-meta"><span class="pill key">A</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s008&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s008&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s009&#39;)" ondragover="dragOver(event,&#39;s009&#39;)" ondrop="dropSong(event,&#39;s009&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">9</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Chasing Cars</div><div class="song-artist">Snow Patrol</div></div><div class="song-meta"><span class="pill key">A</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s009&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s009&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s010&#39;)" ondragover="dragOver(event,&#39;s010&#39;)" ondrop="dropSong(event,&#39;s010&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">10</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Drift Away</div><div class="song-artist">Uncle Kracker</div></div><div class="song-meta"><span class="pill key">A</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s010&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s010&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s011&#39;)" ondragover="dragOver(event,&#39;s011&#39;)" ondrop="dropSong(event,&#39;s011&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">11</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">For the First Time</div><div class="song-artist">The Script</div></div><div class="song-meta"><span class="pill key">C (Capo 6)</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s011&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s011&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s012&#39;)" ondragover="dragOver(event,&#39;s012&#39;)" ondrop="dropSong(event,&#39;s012&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">12</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">I'm Yours</div><div class="song-artist">Jason Mraz</div></div><div class="song-meta"><span class="pill key">Bb</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s012&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s012&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s013&#39;)" ondragover="dragOver(event,&#39;s013&#39;)" ondrop="dropSong(event,&#39;s013&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">13</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">The A-Team</div><div class="song-artist">Ed Sheeran</div></div><div class="song-meta"><span class="pill key">A</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s013&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s013&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s014&#39;)" ondragover="dragOver(event,&#39;s014&#39;)" ondrop="dropSong(event,&#39;s014&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">14</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Broken Halos</div><div class="song-artist">Chris Stapleton</div></div><div class="song-meta"><span class="pill key">G</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s014&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s014&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s015&#39;)" ondragover="dragOver(event,&#39;s015&#39;)" ondrop="dropSong(event,&#39;s015&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">15</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Someone You Loved</div><div class="song-artist">Lewis Capaldi</div></div><div class="song-meta"><span class="pill key">Bb</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s015&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s015&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s016&#39;)" ondragover="dragOver(event,&#39;s016&#39;)" ondrop="dropSong(event,&#39;s016&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">16</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Take Me Home, Country Roads</div><div class="song-artist">John Denver</div></div><div class="song-meta"><span class="pill key">Ab</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s016&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s016&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s017&#39;)" ondragover="dragOver(event,&#39;s017&#39;)" ondrop="dropSong(event,&#39;s017&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">17</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Something in the Orange</div><div class="song-artist">Zach Bryan</div></div><div class="song-meta"><span class="pill key">E (Capo 4, C shape)</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s017&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s017&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s018&#39;)" ondragover="dragOver(event,&#39;s018&#39;)" ondrop="dropSong(event,&#39;s018&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">18</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Feathered Indians</div><div class="song-artist">Tyler Childers</div></div><div class="song-meta"><span class="pill key">G</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s018&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s018&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s019&#39;)" ondragover="dragOver(event,&#39;s019&#39;)" ondrop="dropSong(event,&#39;s019&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">19</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">She Will Be Loved</div><div class="song-artist">Maroon 5</div></div><div class="song-meta"><span class="pill key">Am</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s019&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s019&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s020&#39;)" ondragover="dragOver(event,&#39;s020&#39;)" ondrop="dropSong(event,&#39;s020&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">20</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">I Wish Grandpas Never Died</div><div class="song-artist">Riley Green</div></div><div class="song-meta"><span class="pill key">E (Capo 2)</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s020&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s020&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s021&#39;)" ondragover="dragOver(event,&#39;s021&#39;)" ondrop="dropSong(event,&#39;s021&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">21</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">Hallelujah</div><div class="song-artist">Leonard Cohen</div></div><div class="song-meta"><span class="pill key">C (Capo 1)</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s021&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s021&#39;)">✕</button></div></div><div class="song-card" draggable="true" ondragstart="dragStart(event,&#39;s022&#39;)" ondragover="dragOver(event,&#39;s022&#39;)" ondrop="dropSong(event,&#39;s022&#39;)" ondragleave="dragLeave(event)"><span class="drag-handle">⠿</span><span class="song-num">22</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span><div class="song-info"><div class="song-title">When It Rains It Pours</div><div class="song-artist">Luke Combs</div></div><div class="song-meta"><span class="pill key">F#</span><span class="pill singer">Matt</span></div><div style="display:flex;gap:4px"><button class="btn small" onclick="openModal(&#39;s022&#39;)">✎</button><button class="btn small danger" onclick="deleteSong(&#39;s022&#39;)">✕</button></div></div></div></div>
+<div class="toast" id="toast"></div>
+
+<!-- SONG MODAL (static HTML, shown/hidden via JS) -->
+<div class="modal-overlay" id="song-modal" style="display: none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title-text">ADD SONG</div>
+    <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label">Song Title *</label><input type="text" id="f-title" placeholder="Song title"></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Artist / Band</label><input type="text" id="f-artist" placeholder="Original artist"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Key</label><select id="f-key"><option value="C">C</option><option value="C#/Db">C#/Db</option><option value="D">D</option><option value="D#/Eb">D#/Eb</option><option value="E">E</option><option value="F">F</option><option value="F#/Gb">F#/Gb</option><option value="G" selected="">G</option><option value="G#/Ab">G#/Ab</option><option value="A">A</option><option value="A#/Bb">A#/Bb</option><option value="B">B</option><option value="Am">Am</option><option value="Em">Em</option><option value="Dm">Dm</option><option value="Cm">Cm</option><option value="Bm">Bm</option><option value="Gm">Gm</option><option value="Fm">Fm</option></select></div>
+      <div class="form-group"><label class="form-label">Lead Singer</label><select id="f-singer"><option value="Matt">Matt</option><option value="Noah">Noah</option><option value="Marisa">Marisa</option><option value="All">All (harmonies)</option></select></div>
+      <div class="form-group"><label class="form-label">BPM</label><input type="number" id="f-bpm" placeholder="120" style="width:100%"></div>
+    </div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Status</label>
+      <select id="f-status" onchange="toggleRequestFields()">
+        <option value="setlist">Set List</option>
+        <option value="backup">Backup</option>
+        <option value="requests">Request / Want to Try</option>
+      </select>
+    </div></div>
+    <div id="request-fields" style="display:none">
+      <div class="form-row"><div class="form-group"><label class="form-label">Requested By</label><select id="f-requestedBy"><option value="">— select —</option><option value="Matt">Matt</option><option value="Noah">Noah</option><option value="Marisa">Marisa</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Request Note</label><input type="text" id="f-requestNote" placeholder="Why this song?"></div></div>
+    </div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Chord Chart / Lyrics (text)</label><textarea id="f-chart" placeholder="Paste chords, lyrics, or notes here..."></textarea></div></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Chord Chart Image</label>
+        <div class="upload-zone" id="upload-zone-img" onclick="document.getElementById(&#39;f-chartImg-input&#39;).click()">
+          <div id="upload-img-inner">📷 Click to upload image<br><small style="color:var(--text3)">JPG or PNG</small></div>
+        </div>
+        <input type="file" id="f-chartImg-input" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+        <button class="btn small danger" id="clear-img-btn" style="display:none;margin-top:6px;width:100%" onclick="clearChartImage()">✕ Remove Image</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Chord Chart PDF</label>
+        <div class="upload-zone" id="upload-zone-pdf" onclick="document.getElementById(&#39;f-chartPdf-input&#39;).click()">
+          <div id="upload-pdf-inner">📄 Click to upload PDF<br><small style="color:var(--text3)">PDF chord chart or lead sheet</small></div>
+        </div>
+        <input type="file" id="f-chartPdf-input" accept="application/pdf" style="display:none" onchange="handlePdfUpload(event)">
+        <button class="btn small danger" id="clear-pdf-btn" style="display:none;margin-top:6px;width:100%" onclick="clearChartPdf()">✕ Remove PDF</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveSong()">✓ Save Song</button>
+    </div>
+  </div>
+</div>
+
+<!-- GIG MODAL -->
+<div class="modal-overlay" id="gig-modal" style="display:none" onclick="if(event.target===this)closeGigModal()">
+  <div class="modal">
+    <div class="modal-title" id="gig-modal-title">ADD GIG</div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Venue Name *</label><input type="text" id="g-venue" placeholder="Bar name or venue"></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">City / Location</label><input type="text" id="g-city" placeholder="City, State"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date *</label><input type="date" id="g-date"></div>
+      <div class="form-group"><label class="form-label">Start Time</label><input type="time" id="g-time"></div>
+    </div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Notes</label><input type="text" id="g-notes" placeholder="Pay, contact, details..."></div></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeGigModal()">Cancel</button>
+      <button class="btn primary" onclick="saveGig()">✓ Save Gig</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEMBER MODAL -->
+<div class="modal-overlay" id="member-modal" style="display:none" onclick="if(event.target===this)closeMemberModal()">
+  <div class="modal">
+    <div class="modal-title" id="member-modal-title">ADD MEMBER</div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Name *</label><input type="text" id="mem-name" placeholder="First name or nickname"></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Role / Instrument</label><input type="text" id="mem-role" placeholder="e.g. Guitar / Vocals"></div></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeMemberModal()">Cancel</button>
+      <button class="btn primary" onclick="saveMember()">✓ Save Member</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://cuacawbagxdgcktksfjr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1YWNhd2JhZ3hkZ2NrdGtzZmpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjg2ODYsImV4cCI6MjA5NTg0NDY4Nn0.yPexI-Tb5XGhqsPSP2lGWAPlT-B3Ea9BP5tqiqnL0uo';
+let sb = null;
+function getSb() {
+  if (!sb) initSupabase();
+  return sb;
+}
+function initSupabase() {
+  if (typeof supabase !== 'undefined') {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    return true;
+  }
+  return false;
+}
+
+const KEYS = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B','Am','Em','Dm','Cm','Bm','Gm','Fm'];
+const MEMBER_COLORS = [
+  {bg:'rgba(232,193,74,0.15)',tc:'#e8c14a'},
+  {bg:'rgba(74,158,221,0.15)',tc:'#6ab8f0'},
+  {bg:'rgba(76,175,130,0.15)',tc:'#6dd4a8'},
+  {bg:'rgba(155,127,232,0.15)',tc:'#b89ff0'},
+];
+
+let state = {
+  view:'songs', songTab:'all', sortBy:'order',
+  filterKey:'', filterSinger:'', searchQ:'',
+  chordIdx:0, chordMode:'text',
+  songs:[], gigs:[], members:[],
+  editSongId:null, editGigId:null, editMemberId:null,
+  loaded:false,
+};
+
+let pendingImgData = '';
+let pendingPdfData = '';
+
+// ── UTILS ──────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function q(id){ return document.getElementById(id); }
+
+function setSyncStatus(s){
+  const dot = q('sync-dot'), lbl = q('sync-label');
+  if(!dot) return;
+  dot.className = 'sync-dot ' + s;
+  lbl.textContent = s==='live'?'Live':s==='syncing'?'Saving...':s==='error'?'Offline':'Connecting...';
+}
+
+let toastTimer;
+function toast(msg, type='info'){
+  const el = q('toast');
+  const color = type==='success'?'var(--green)':type==='error'?'var(--red)':'var(--accent)';
+  el.innerHTML = '<span style="color:'+color+'">'+(type==='success'?'✓':type==='error'?'✕':'↻')+'</span> ' + esc(msg);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+// ── DB HELPERS ─────────────────────────────────────────────────
+function dbToSong(r){
+  return { id:r.id, title:r.title||'', artist:r.artist||'', key:r.key||'G', singer:r.singer||'',
+    bpm:r.bpm||0, status:r.status||'setlist', order:r.sort_order||0,
+    chart:r.chart||'', chartImg:r.chart_img||'', chartPdf:r.chart_pdf||'',
+    requestedBy:r.requested_by||'', requestNote:r.request_note||'' };
+}
+function songToDb(s){
+  return { id:String(s.id), title:s.title, artist:s.artist||'', key:s.key||'G',
+    singer:s.singer||'', bpm:s.bpm||0, status:s.status||'setlist', sort_order:s.order||0,
+    chart:s.chart||'', chart_img:s.chartImg||'', chart_pdf:s.chartPdf||'',
+    requested_by:s.requestedBy||'', request_note:s.requestNote||'' };
+}
+function dbToGig(r){ return {id:r.id,venue:r.venue,city:r.city||'',date:r.date,time:r.time||'',notes:r.notes||''}; }
+function gigToDb(g){ return {id:String(g.id),venue:g.venue,city:g.city||'',date:g.date,time:g.time||'',notes:g.notes||''}; }
+function dbToMember(r){ return {id:r.id,name:r.name,role:r.role||'',order:r.sort_order||0}; }
+function memberToDb(m){ return {id:String(m.id),name:m.name,role:m.role||'',sort_order:m.order||0}; }
+
+// ── LOAD & REALTIME ────────────────────────────────────────────
+async function loadAll(){
+  // Retry supabase init up to 20 times (2 seconds) in case CDN is slow
+  let attempts = 0;
+  while (!initSupabase() && attempts < 20) {
+    await new Promise(r => setTimeout(r, 100));
+    attempts++;
+  }
+  if (!sb) {
+    setSyncStatus('error');
+    state.loaded = true;
+    toast('Could not load Supabase library. Check your internet connection.', 'error');
+    render();
+    return;
+  }
+  try {
+    const [sr,gr,mr] = await Promise.all([
+      sb.from('songs').select('*').order('sort_order'),
+      sb.from('gigs').select('*').order('date'),
+      sb.from('members').select('*').order('sort_order'),
+    ]);
+    if(sr.error) throw sr.error;
+    state.songs = sr.data.map(dbToSong);
+    state.gigs = gr.data.map(dbToGig);
+    state.members = mr.data.map(dbToMember);
+    if(!state.members.length) await seedMembers();
+    state.loaded = true;
+    setSyncStatus('live');
+    render();
+    subscribeRealtime();
+  } catch(e) {
+    setSyncStatus('error');
+    state.loaded = true;
+    toast('Could not connect. Check Supabase setup.','error');
+    render();
+  }
+}
+
+async function seedMembers(){
+  const defaults = [
+    {id:'m1',name:'Matt',role:'Guitar / Vocals',sort_order:1},
+    {id:'m2',name:'Member 2',role:'Bass / Vocals',sort_order:2},
+    {id:'m3',name:'Member 3',role:'Drums / Vocals',sort_order:3},
+  ];
+  await sb.from('members').upsert(defaults);
+  state.members = defaults.map(dbToMember);
+}
+
+function subscribeRealtime(){
+  sb.channel('bandmate')
+    .on('postgres_changes',{event:'*',schema:'public',table:'songs'},p=>handleRT('songs',p))
+    .on('postgres_changes',{event:'*',schema:'public',table:'gigs'},p=>handleRT('gigs',p))
+    .on('postgres_changes',{event:'*',schema:'public',table:'members'},p=>handleRT('members',p))
+    .subscribe(s=>{ if(s==='SUBSCRIBED') setSyncStatus('live'); else if(s==='CLOSED') setSyncStatus('error'); });
+}
+
+function handleRT(table, {eventType:ev, new:n, old:o}){
+  if(table==='songs'){
+    if(ev==='INSERT'){ if(!state.songs.find(s=>String(s.id)===String(n.id))){ state.songs.push(dbToSong(n)); toast('"'+n.title+'" added','success'); } }
+    else if(ev==='UPDATE'){ const i=state.songs.findIndex(s=>String(s.id)===String(n.id)); if(i>=0) state.songs[i]=dbToSong(n); }
+    else if(ev==='DELETE'){ state.songs=state.songs.filter(s=>String(s.id)!==String(o.id)); }
+  } else if(table==='gigs'){
+    if(ev==='INSERT'){ if(!state.gigs.find(g=>String(g.id)===String(n.id))){ state.gigs.push(dbToGig(n)); toast('Gig at '+n.venue+' added','success'); } }
+    else if(ev==='UPDATE'){ const i=state.gigs.findIndex(g=>String(g.id)===String(n.id)); if(i>=0) state.gigs[i]=dbToGig(n); }
+    else if(ev==='DELETE'){ state.gigs=state.gigs.filter(g=>String(g.id)!==String(o.id)); }
+  } else if(table==='members'){
+    if(ev==='INSERT'){ if(!state.members.find(m=>String(m.id)===String(n.id))) state.members.push(dbToMember(n)); }
+    else if(ev==='UPDATE'){ const i=state.members.findIndex(m=>String(m.id)===String(n.id)); if(i>=0) state.members[i]=dbToMember(n); }
+    else if(ev==='DELETE'){ state.members=state.members.filter(m=>String(m.id)!==String(o.id)); }
+  }
+  render();
+}
+
+// ── NAV ────────────────────────────────────────────────────────
+function navigate(v){ state.view=v; render(); }
+
+function renderNav(){
+  const views = [
+    {id:'songs',label:'Songs',icon:'🎵'},
+    {id:'setlist',label:'Set List',icon:'📋'},
+    {id:'chords',label:'Charts',icon:'📄'},
+    {id:'schedule',label:'Schedule',icon:'📅'},
+    {id:'members',label:'Band',icon:'👥'},
+  ];
+  const counts = {
+    songs:state.songs.length,
+    setlist:state.songs.filter(s=>s.status==='setlist').length,
+    chords:state.songs.filter(s=>s.chart||s.chartImg||s.chartPdf).length,
+    schedule:state.gigs.length,
+    members:state.members.length,
+  };
+  return views.map(v=>`
+    <button class="nav-btn ${state.view===v.id?'active':''}" onclick="navigate('${v.id}')">
+      ${v.icon} ${v.label} <span class="badge">${counts[v.id]}</span>
+    </button>`).join('');
+}
+
+// ── HELPERS ────────────────────────────────────────────────────
+function hasChart(s){ return (s.chart&&s.chart.trim())||(s.chartImg&&s.chartImg.trim())||(s.chartPdf&&s.chartPdf.trim()); }
+
+function getFilteredSongs(){
+  let songs = [...state.songs];
+  if(state.songTab!=='all') songs=songs.filter(s=>s.status===state.songTab);
+  if(state.filterKey) songs=songs.filter(s=>s.key===state.filterKey);
+  if(state.filterSinger) songs=songs.filter(s=>s.singer===state.filterSinger);
+  if(state.searchQ){ const q=state.searchQ.toLowerCase(); songs=songs.filter(s=>(s.title+s.artist+s.singer+s.key).toLowerCase().includes(q)); }
+  if(state.sortBy==='key') songs.sort((a,b)=>(a.key||'').localeCompare(b.key||''));
+  else if(state.sortBy==='title') songs.sort((a,b)=>a.title.localeCompare(b.title));
+  else if(state.sortBy==='singer') songs.sort((a,b)=>(a.singer||'').localeCompare(b.singer||''));
+  else if(state.sortBy==='bpm') songs.sort((a,b)=>(b.bpm||0)-(a.bpm||0));
+  else songs.sort((a,b)=>a.order-b.order);
+  return songs;
+}
+
+function songCardHTML(s, num, showSetlistNum){
+  const sc={setlist:'var(--green)',backup:'var(--blue)',requests:'var(--accent)'};
+  const numEl = showSetlistNum
+    ? '<span class="setlist-num">'+num+'</span>'
+    : '<span class="song-num">'+num+'</span>';
+  const dot = '<span style="width:6px;height:6px;border-radius:50%;background:'+( sc[s.status]||'var(--text3)')+';display:inline-block;flex-shrink:0"></span>';
+  const pills = (s.key?'<span class="pill key">'+esc(s.key)+'</span>':'')
+    + (s.singer?'<span class="pill singer">'+esc(s.singer)+'</span>':'')
+    + (s.bpm?'<span class="pill bpm">'+s.bpm+' bpm</span>':'')
+    + (hasChart(s)?'<span class="pill has-chart">♪</span>':'');
+  const reqNote = s.requestedBy
+    ? ' · <span style="color:var(--accent);font-size:11px">Req. by '+esc(s.requestedBy)+'</span>'+(s.requestNote?' <span style="color:var(--text3);font-size:11px">— '+esc(s.requestNote)+'</span>':'')
+    : '';
+  return '<div class="song-card" draggable="true" ondragstart="dragStart(event,\''+s.id+'\')" ondragover="dragOver(event,\''+s.id+'\')" ondrop="dropSong(event,\''+s.id+'\')" ondragleave="dragLeave(event)">'
+    + '<span class="drag-handle">⠿</span>'
+    + numEl
+    + (showSetlistNum?'':dot)
+    + '<div class="song-info"><div class="song-title">'+esc(s.title)+'</div>'
+    + '<div class="song-artist">'+esc(s.artist||'')+reqNote+'</div></div>'
+    + '<div class="song-meta">'+pills+'</div>'
+    + '<div style="display:flex;gap:4px">'
+    + '<button class="btn small" onclick="openModal(\''+s.id+'\')">✎</button>'
+    + '<button class="btn small danger" onclick="deleteSong(\''+s.id+'\')">✕</button>'
+    + '</div></div>';
+}
+
+// ── VIEWS ──────────────────────────────────────────────────────
+function songsView(){
+  const tabs = [
+    {id:'all',label:'All'},
+    {id:'setlist',label:'Set List'},
+    {id:'backup',label:'Backup'},
+    {id:'requests',label:'Requests'},
+  ];
+  const singers = [...new Set(state.songs.map(s=>s.singer).filter(Boolean))];
+  const keys = [...new Set(state.songs.map(s=>s.key).filter(Boolean))].sort();
+  const filtered = getFilteredSongs();
+
+  let songsHTML = '';
+  if(state.sortBy==='key'){
+    const groups = {};
+    filtered.forEach(s=>{ const k=s.key||'?'; if(!groups[k]) groups[k]=[]; groups[k].push(s); });
+    Object.keys(groups).sort().forEach(k=>{
+      songsHTML += '<div class="key-group-header">♪ Key of '+k+'</div>';
+      songsHTML += groups[k].map((s,i)=>songCardHTML(s,i+1,false)).join('');
+    });
+  } else {
+    songsHTML = filtered.length
+      ? filtered.map((s,i)=>songCardHTML(s,i+1,false)).join('')
+      : '<div class="empty-state"><p>No songs found.</p></div>';
+  }
+
+  const tabHTML = tabs.map(t=>{
+    const count = t.id==='all'?state.songs.length:state.songs.filter(s=>s.status===t.id).length;
+    return '<button class="status-tab '+(state.songTab===t.id?'active-'+t.id:'')+'" onclick="setSongTab(\''+t.id+'\')">'
+      +t.label+' <span style="font-size:10px;opacity:.6">'+count+'</span></button>';
+  }).join('');
+
+  const keyOpts = keys.map(k=>'<option value="'+esc(k)+'" '+(state.filterKey===k?'selected':'')+'>'+esc(k)+'</option>').join('');
+  const singerOpts = singers.map(s=>'<option value="'+esc(s)+'" '+(state.filterSinger===s?'selected':'')+'>'+esc(s)+'</option>').join('');
+
+  return '<div class="section-head">'
+    + '<div><div class="section-title">SONGS</div><div class="section-sub">'+state.songs.length+' songs total</div></div>'
+    + '<button class="btn primary" onclick="openModal()">+ Add Song</button></div>'
+    + '<div class="status-tabs">'+tabHTML+'</div>'
+    + '<div class="filters">'
+    + '<input type="text" placeholder="Search..." value="'+esc(state.searchQ)+'" oninput="state.searchQ=this.value;render()" style="min-width:160px"/>'
+    + '<select onchange="state.filterKey=this.value;render()"><option value="">All keys</option>'+keyOpts+'</select>'
+    + '<select onchange="state.filterSinger=this.value;render()"><option value="">All singers</option>'+singerOpts+'</select>'
+    + '<select onchange="state.sortBy=this.value;render()">'
+    + '<option value="order" '+(state.sortBy==='order'?'selected':'')+'>Sort: Default</option>'
+    + '<option value="key" '+(state.sortBy==='key'?'selected':'')+'>Sort: Key</option>'
+    + '<option value="title" '+(state.sortBy==='title'?'selected':'')+'>Sort: A–Z</option>'
+    + '<option value="singer" '+(state.sortBy==='singer'?'selected':'')+'>Sort: Singer</option>'
+    + '<option value="bpm" '+(state.sortBy==='bpm'?'selected':'')+'>Sort: BPM</option>'
+    + '</select></div>'
+    + '<div class="songs-list">'+songsHTML+'</div>';
+}
+
+function setlistView(){
+  const songs = state.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const backup = state.songs.filter(s=>s.status==='backup').sort((a,b)=>a.order-b.order);
+  let html = '<div class="section-head">'
+    + '<div><div class="section-title">SET LIST</div><div class="section-sub">'+songs.length+' songs · ~'+Math.round(songs.length*3.5)+' min</div></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<button class="btn" onclick="exportSetlistPDF()">📄 Export PDF</button>'
+    + '<button class="btn primary" onclick="navigate(\'chords\')">♪ View Charts</button>'
+    + '</div></div>';
+
+  if(songs.length){
+    html += '<div class="songs-list">'+songs.map((s,i)=>{
+      const pills = (s.key?'<span class="pill key">'+esc(s.key)+'</span>':'')
+        + (s.singer?'<span class="pill singer">'+esc(s.singer)+'</span>':'')
+        + (s.bpm?'<span class="pill bpm">'+s.bpm+' bpm</span>':'');
+      return '<div class="song-card" draggable="true" ondragstart="dragStart(event,\''+s.id+'\')" ondragover="dragOver(event,\''+s.id+'\')" ondrop="dropSetlist(event,\''+s.id+'\')" ondragleave="dragLeave(event)">'
+        + '<span class="drag-handle">⠿</span>'
+        + '<span class="setlist-num">'+(i+1)+'</span>'
+        + '<div class="song-info"><div class="song-title">'+esc(s.title)+'</div><div class="song-artist">'+esc(s.artist||'')+'</div></div>'
+        + '<div class="song-meta">'+pills+'</div>'
+        + '<button class="btn small" onclick="moveSong(\''+s.id+'\',\'backup\')" title="Move to Backup">📦</button>'
+        + '</div>';
+    }).join('')+'</div>';
+  } else {
+    html += '<div class="empty-state"><p>No songs in set list yet.</p></div>';
+  }
+
+  if(backup.length){
+    html += '<div class="divider"></div>'
+      + '<div style="font-family:var(--font-head);font-size:18px;letter-spacing:1px;color:var(--text2);margin-bottom:12px">BACKUP SONGS</div>'
+      + '<div class="songs-list">'+backup.map((s,i)=>'<div class="song-card" style="opacity:.6">'
+        + '<span class="song-num">'+(i+1)+'</span>'
+        + '<div class="song-info"><div class="song-title">'+esc(s.title)+'</div><div class="song-artist">'+esc(s.artist||'')+'</div></div>'
+        + '<div class="song-meta">'+(s.key?'<span class="pill key">'+esc(s.key)+'</span>':'')+(s.singer?'<span class="pill singer">'+esc(s.singer)+'</span>':'')+'</div>'
+        + '<button class="btn small" onclick="moveSong(\''+s.id+'\',\'setlist\')">+ Add</button>'
+        + '</div>').join('')+'</div>';
+  }
+  return html;
+}
+
+function chordsView(){
+  const setlistSongs = state.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const allSongs = [...setlistSongs, ...state.songs.filter(s=>s.status!=='setlist')];
+  if(state.chordIdx>=allSongs.length) state.chordIdx=0;
+  const cur = allSongs[state.chordIdx];
+
+  let contentHTML = '';
+  if(!cur){
+    contentHTML = '<div class="chord-empty"><p>Add songs to see chord charts</p></div>';
+  } else if(state.chordMode==='image' && cur.chartImg){
+    contentHTML = '<div class="chord-file-display"><img src="'+cur.chartImg+'" alt="Chart for '+esc(cur.title)+'"/></div>';
+  } else if(state.chordMode==='pdf' && cur.chartPdf){
+    contentHTML = '<div class="chord-file-display"><iframe src="'+cur.chartPdf+'" title="PDF chart for '+esc(cur.title)+'"></iframe></div>';
+  } else if(state.chordMode==='text' && cur.chart && cur.chart.trim()){
+    contentHTML = '<div class="chord-content">'+esc(cur.chart)+'</div>';
+  } else {
+    contentHTML = '<div class="chord-empty"><p style="font-weight:500">'+esc(cur.title)+'</p>'
+      + '<p>No '+esc(state.chordMode)+' chart added yet.</p>'
+      + '<button class="btn primary" onclick="openModal(\''+cur.id+'\')">+ Add Chart</button></div>';
+  }
+
+  const dots = allSongs.map((s,i)=>'<div class="chord-dot '+(i===state.chordIdx?'active':'')+(hasChart(s)?' has-chart':'')+'" onclick="state.chordIdx='+i+';render()" title="'+esc(s.title)+'"></div>').join('');
+
+  const modeTabs = ['text','image','pdf'].map(m=>'<button class="chart-mode-tab '+(state.chordMode===m?'active':'')+'" onclick="state.chordMode=\''+m+'\';render()">'+m.charAt(0).toUpperCase()+m.slice(1)+'</button>').join('');
+
+  const navInfo = cur
+    ? '<div style="flex:1"><div style="font-weight:500;font-size:14px">'+esc(cur.title)+'</div>'
+      + '<div style="font-size:11px;color:var(--text2)">'+esc(cur.artist||'')+' · Key: '+esc(cur.key||'?')+' · '+esc(cur.singer||'?')+'</div></div>'
+      + '<div class="chart-mode-tabs">'+modeTabs+'</div>'
+    : '<div style="flex:1;color:var(--text3)">No songs yet</div>';
+
+  const exportBtn = cur && hasChart(cur)
+    ? '<button class="btn" onclick="exportSingleChartPDF(\''+cur.id+'\')">📄 This Chart</button>' : '';
+
+  return '<div class="section-head">'
+    + '<div><div class="section-title">CHORD CHARTS</div><div class="section-sub">Swipe or tap arrows</div></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + (cur?'<button class="btn" onclick="openModal(\''+cur.id+'\')">✎ Edit</button>':'')
+    + exportBtn
+    + '<button class="btn primary" onclick="exportAllChartsPDF()">📄 All Charts</button>'
+    + '</div></div>'
+    + '<div class="chord-viewer">'
+    + '<div class="chord-nav">'
+    + '<button class="btn icon-only" onclick="prevChord()" '+(state.chordIdx===0?'disabled':'')+'>◀</button>'
+    + navInfo
+    + '<div class="chord-progress">'+dots+'</div>'
+    + '<button class="btn icon-only" onclick="nextChord('+allSongs.length+')" '+(state.chordIdx>=allSongs.length-1?'disabled':'')+'>▶</button>'
+    + '</div>'+contentHTML+'</div>'
+    + '<p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Filled dots = has chart</p>';
+}
+
+function prevChord(){ if(state.chordIdx>0){ state.chordIdx--; render(); } }
+function nextChord(len){ if(state.chordIdx<len-1){ state.chordIdx++; render(); } }
+
+function scheduleView(){
+  const today = new Date(new Date().toDateString());
+  const upcoming = state.gigs.filter(g=>new Date(g.date+'T12:00:00')>=today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const past = state.gigs.filter(g=>new Date(g.date+'T12:00:00')<today).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let html = '<div class="section-head">'
+    + '<div><div class="section-title">SCHEDULE</div><div class="section-sub">'+upcoming.length+' upcoming</div></div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button class="btn" onclick="exportSchedulePDF()">📄 Export PDF</button>'
+    + '<button class="btn primary" onclick="openGigModal()">+ Add Gig</button>'
+    + '</div></div>';
+
+  function gigCardHTML(g, isPast){
+    const d = new Date(g.date+'T12:00:00');
+    const ds = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    return '<div class="gig-card" style="'+(isPast?'opacity:.5':'')+'">'
+      + '<div class="gig-date">'+ds+'</div>'
+      + '<div class="gig-venue">'+esc(g.venue)+'</div>'
+      + '<div class="gig-detail">'+(g.time?esc(g.time)+' · ':'')+esc(g.city||'')+(g.notes?'<br><span style="color:var(--text3)">'+esc(g.notes)+'</span>':'')+'</div>'
+      + '<div class="gig-footer">'
+      + '<span style="font-size:11px;color:'+(isPast?'var(--text3)':'var(--green)')+';font-family:var(--font-mono)">'+(isPast?'DONE':'UPCOMING')+'</span>'
+      + '<div style="display:flex;gap:4px">'
+      + '<button class="btn small" onclick="openGigModal(\''+g.id+'\')">✎</button>'
+      + '<button class="btn small danger" onclick="deleteGig(\''+g.id+'\')">✕</button>'
+      + '</div></div></div>';
+  }
+
+  if(upcoming.length){
+    html += '<div style="font-size:11px;color:var(--accent);font-family:var(--font-mono);letter-spacing:1px;margin-bottom:12px">UPCOMING</div>'
+      + '<div class="gigs-grid">'+upcoming.map(g=>gigCardHTML(g,false)).join('')+'</div>';
+  } else {
+    html += '<div class="empty-state"><p>No upcoming gigs yet.</p></div>';
+  }
+  if(past.length){
+    html += '<div class="divider"></div>'
+      + '<div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);letter-spacing:1px;margin-bottom:12px">PAST SHOWS</div>'
+      + '<div class="gigs-grid">'+past.map(g=>gigCardHTML(g,true)).join('')+'</div>';
+  }
+  return html;
+}
+
+function membersView(){
+  let html = '<div class="section-head">'
+    + '<div><div class="section-title">BAND</div><div class="section-sub">'+state.members.length+' members</div></div>'
+    + '<button class="btn primary" onclick="openMemberModal()">+ Add Member</button></div>'
+    + '<div class="member-grid">';
+
+  state.members.forEach((m,mi)=>{
+    const c = MEMBER_COLORS[mi%MEMBER_COLORS.length];
+    const initials = m.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const leadsCount = state.songs.filter(s=>s.singer===m.name).length;
+    const reqCount = state.songs.filter(s=>s.requestedBy===m.name).length;
+    const setlistSongs = state.songs.filter(s=>s.singer===m.name&&s.status==='setlist');
+    const preview = setlistSongs.slice(0,3).map(s=>'<span style="background:var(--bg3);border-radius:4px;padding:2px 6px;margin:2px;display:inline-block;font-size:11px;color:var(--text2)">'+esc(s.title)+'</span>').join('')
+      + (setlistSongs.length>3?'<span style="color:var(--text3);font-size:11px">+'+( setlistSongs.length-3)+' more</span>':'');
+
+    html += '<div class="member-card">'
+      + '<div class="member-header">'
+      + '<div class="member-avatar" style="background:'+c.bg+';color:'+c.tc+'">'+initials+'</div>'
+      + '<div><div style="font-weight:500;font-size:15px">'+esc(m.name)+'</div><div style="font-size:12px;color:var(--text2)">'+esc(m.role||'Band Member')+'</div></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<div class="stat-pill">Leads: <b style="color:var(--text)">'+leadsCount+'</b></div>'
+      + '<div class="stat-pill">Requests: <b style="color:var(--text)">'+reqCount+'</b></div>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--text3)">'+preview+'</div>'
+      + '<div style="display:flex;gap:6px;margin-top:4px">'
+      + '<button class="btn small" style="flex:1" onclick="openMemberModal(\''+m.id+'\')">✎ Edit</button>'
+      + (state.members.length>1?'<button class="btn small danger" onclick="deleteMember(\''+m.id+'\')">✕</button>':'')
+      + '</div></div>';
+  });
+
+  html += '</div><div class="divider"></div>'
+    + '<div style="font-family:var(--font-head);font-size:18px;letter-spacing:1px;margin-bottom:12px">BREAKDOWN BY MEMBER</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">';
+
+  state.members.forEach((m,mi)=>{
+    const c = MEMBER_COLORS[mi%MEMBER_COLORS.length];
+    const setlist = state.songs.filter(s=>s.singer===m.name&&s.status==='setlist');
+    const backup = state.songs.filter(s=>s.singer===m.name&&s.status==='backup');
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:14px">'
+      + '<div style="font-weight:500;font-size:13px;color:'+c.tc+';margin-bottom:8px">'+esc(m.name)+'</div>'
+      + '<div style="font-size:12px;color:var(--text2)">'
+      + '<div>Set list: <b style="color:var(--text)">'+setlist.length+'</b></div>'
+      + '<div>Backup: <b style="color:var(--text)">'+backup.length+'</b></div>'
+      + setlist.map(s=>'<div style="color:var(--text3);font-size:11px">· '+esc(s.title)+' <span style="font-family:var(--font-mono);opacity:.6">'+esc(s.key||'')+'</span></div>').join('')
+      + '</div></div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+// ── SONG MODAL ─────────────────────────────────────────────────
+function openModal(id){
+  state.editSongId = id || null;
+  const s = id ? state.songs.find(x=>String(x.id)===String(id)) : null;
+  const v = s || {title:'',artist:'',key:'G',singer:'',bpm:'',status:'setlist',chart:'',chartImg:'',chartPdf:'',requestedBy:'',requestNote:''};
+
+  q('modal-title-text').textContent = s ? 'EDIT SONG' : 'ADD SONG';
+  q('f-title').value = v.title;
+  q('f-artist').value = v.artist;
+  q('f-bpm').value = v.bpm || '';
+  q('f-chart').value = v.chart || '';
+  q('f-requestNote').value = v.requestNote || '';
+
+  // Populate key select
+  const keyEl = q('f-key');
+  keyEl.innerHTML = KEYS.map(k=>'<option value="'+k+'" '+(v.key===k?'selected':'')+'>'+k+'</option>').join('');
+
+  // Populate singer select
+  const singerEl = q('f-singer');
+  singerEl.innerHTML = state.members.map(m=>'<option value="'+esc(m.name)+'" '+(v.singer===m.name?'selected':'')+'>'+esc(m.name)+'</option>').join('')
+    + '<option value="All" '+(v.singer==='All'?'selected':'')+'>All (harmonies)</option>';
+
+  // Populate requestedBy select
+  const reqByEl = q('f-requestedBy');
+  reqByEl.innerHTML = '<option value="">— select —</option>'
+    + state.members.map(m=>'<option value="'+esc(m.name)+'" '+(v.requestedBy===m.name?'selected':'')+'>'+esc(m.name)+'</option>').join('');
+
+  // Status
+  q('f-status').value = v.status || 'setlist';
+  toggleRequestFields();
+
+  // Image upload zone
+  pendingImgData = '';
+  if(v.chartImg){
+    q('upload-zone-img').classList.add('has-file');
+    q('upload-img-inner').innerHTML = '<img src="'+v.chartImg+'" style="max-width:100%;max-height:120px;border-radius:6px;display:block;margin:0 auto"/><div style="font-size:11px;color:var(--text3);margin-top:4px">Click to replace</div>';
+    q('clear-img-btn').style.display = 'block';
+  } else {
+    q('upload-zone-img').classList.remove('has-file');
+    q('upload-img-inner').innerHTML = '📷 Click to upload image<br><small style="color:var(--text3)">JPG or PNG</small>';
+    q('clear-img-btn').style.display = 'none';
+  }
+
+  // PDF upload zone
+  pendingPdfData = '';
+  if(v.chartPdf){
+    q('upload-zone-pdf').classList.add('has-file');
+    q('upload-pdf-inner').innerHTML = '📄 PDF uploaded — click to replace';
+    q('clear-pdf-btn').style.display = 'block';
+  } else {
+    q('upload-zone-pdf').classList.remove('has-file');
+    q('upload-pdf-inner').innerHTML = '📄 Click to upload PDF<br><small style="color:var(--text3)">PDF chord chart or lead sheet</small>';
+    q('clear-pdf-btn').style.display = 'none';
+  }
+
+  q('song-modal').style.display = 'flex';
+}
+
+function closeModal(){
+  q('song-modal').style.display = 'none';
+  state.editSongId = null;
+  pendingImgData = '';
+  pendingPdfData = '';
+}
+
+function toggleRequestFields(){
+  const s = q('f-status');
+  if(s) q('request-fields').style.display = s.value==='requests' ? 'block' : 'none';
+}
+
+function handleImageUpload(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingImgData = ev.target.result;
+    q('upload-zone-img').classList.add('has-file');
+    q('upload-img-inner').innerHTML = '<img src="'+pendingImgData+'" style="max-width:100%;max-height:120px;border-radius:6px;display:block;margin:0 auto"/><div style="font-size:11px;color:var(--text3);margin-top:4px">Click to replace</div>';
+    q('clear-img-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearChartImage(){
+  pendingImgData = '__CLEAR__';
+  q('upload-zone-img').classList.remove('has-file');
+  q('upload-img-inner').innerHTML = '📷 Click to upload image<br><small style="color:var(--text3)">JPG or PNG</small>';
+  q('clear-img-btn').style.display = 'none';
+}
+
+function handlePdfUpload(e){
+  const file = e.target.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){ alert('PDF must be under 5MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingPdfData = ev.target.result;
+    q('upload-zone-pdf').classList.add('has-file');
+    q('upload-pdf-inner').innerHTML = '📄 '+esc(file.name)+' — click to replace';
+    q('clear-pdf-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearChartPdf(){
+  pendingPdfData = '__CLEAR__';
+  q('upload-zone-pdf').classList.remove('has-file');
+  q('upload-pdf-inner').innerHTML = '📄 Click to upload PDF<br><small style="color:var(--text3)">PDF chord chart or lead sheet</small>';
+  q('clear-pdf-btn').style.display = 'none';
+}
+
+async function saveSong(){
+  const title = q('f-title').value.trim();
+  if(!title){ alert('Song title is required'); return; }
+  const id = state.editSongId;
+  const existing = id ? state.songs.find(s=>String(s.id)===String(id)) : null;
+
+  let chartImg = existing?.chartImg || '';
+  if(pendingImgData==='__CLEAR__') chartImg='';
+  else if(pendingImgData) chartImg=pendingImgData;
+
+  let chartPdf = existing?.chartPdf || '';
+  if(pendingPdfData==='__CLEAR__') chartPdf='';
+  else if(pendingPdfData) chartPdf=pendingPdfData;
+
+  const song = {
+    id: id || String(Date.now()),
+    title,
+    artist: q('f-artist').value.trim(),
+    key: q('f-key').value,
+    singer: q('f-singer').value,
+    bpm: parseInt(q('f-bpm').value)||0,
+    status: q('f-status').value,
+    chart: q('f-chart').value,
+    chartImg, chartPdf,
+    requestedBy: q('f-requestedBy').value||'',
+    requestNote: q('f-requestNote').value||'',
+    order: existing ? existing.order : state.songs.length+1,
+  };
+
+  setSyncStatus('syncing');
+  const {error} = await sb.from('songs').upsert(songToDb(song));
+  if(error){ toast('Error saving: '+error.message,'error'); setSyncStatus('error'); }
+  else {
+    if(existing){ const i=state.songs.findIndex(s=>String(s.id)===String(id)); state.songs[i]=song; }
+    else state.songs.push(song);
+    setSyncStatus('live');
+    toast(existing?'Song updated':'Song added!','success');
+  }
+  closeModal();
+  render();
+}
+
+// ── GIG MODAL ──────────────────────────────────────────────────
+function openGigModal(id){
+  state.editGigId = id || null;
+  const g = id ? state.gigs.find(x=>String(x.id)===String(id)) : null;
+  q('gig-modal-title').textContent = g ? 'EDIT GIG' : 'ADD GIG';
+  q('g-venue').value = g?.venue||'';
+  q('g-city').value = g?.city||'';
+  q('g-date').value = g?.date||'';
+  q('g-time').value = g?.time||'';
+  q('g-notes').value = g?.notes||'';
+  q('gig-modal').style.display = 'flex';
+}
+function closeGigModal(){ q('gig-modal').style.display='none'; state.editGigId=null; }
+
+async function saveGig(){
+  const venue = q('g-venue').value.trim();
+  const date = q('g-date').value;
+  if(!venue||!date){ alert('Venue and date are required'); return; }
+  const id = state.editGigId;
+  const gig = { id:id||('g'+Date.now()), venue, date, city:q('g-city').value.trim(), time:q('g-time').value, notes:q('g-notes').value.trim() };
+  setSyncStatus('syncing');
+  const {error} = await sb.from('gigs').upsert(gigToDb(gig));
+  if(error){ toast('Error saving gig','error'); setSyncStatus('error'); }
+  else {
+    const i = state.gigs.findIndex(g=>String(g.id)===String(gig.id));
+    if(i>=0) state.gigs[i]=gig; else state.gigs.push(gig);
+    setSyncStatus('live'); toast('Gig saved','success');
+  }
+  closeGigModal(); render();
+}
+
+async function deleteGig(id){
+  if(!confirm('Remove this gig?')) return;
+  setSyncStatus('syncing');
+  const {error} = await sb.from('gigs').delete().eq('id',String(id));
+  if(error){ toast('Error deleting gig','error'); setSyncStatus('error'); }
+  else { state.gigs=state.gigs.filter(g=>String(g.id)!==String(id)); setSyncStatus('live'); }
+  render();
+}
+
+// ── MEMBER MODAL ───────────────────────────────────────────────
+function openMemberModal(id){
+  state.editMemberId = id || null;
+  const m = id ? state.members.find(x=>String(x.id)===String(id)) : null;
+  q('member-modal-title').textContent = m ? 'EDIT MEMBER' : 'ADD MEMBER';
+  q('mem-name').value = m?.name||'';
+  q('mem-role').value = m?.role||'';
+  q('member-modal').style.display = 'flex';
+}
+function closeMemberModal(){ q('member-modal').style.display='none'; state.editMemberId=null; }
+
+async function saveMember(){
+  const name = q('mem-name').value.trim();
+  if(!name){ alert('Name is required'); return; }
+  const id = state.editMemberId;
+  const member = { id:id||('m'+Date.now()), name, role:q('mem-role').value.trim(), order:state.members.length+1 };
+  setSyncStatus('syncing');
+  const {error} = await sb.from('members').upsert(memberToDb(member));
+  if(error){ toast('Error saving member','error'); setSyncStatus('error'); }
+  else {
+    const i = state.members.findIndex(m=>String(m.id)===String(member.id));
+    if(i>=0) state.members[i]=member; else state.members.push(member);
+    setSyncStatus('live'); toast('Member saved','success');
+  }
+  closeMemberModal(); render();
+}
+
+async function deleteMember(id){
+  if(!confirm('Remove this member?')) return;
+  setSyncStatus('syncing');
+  const {error} = await sb.from('members').delete().eq('id',String(id));
+  if(error){ toast('Error','error'); setSyncStatus('error'); }
+  else { state.members=state.members.filter(m=>String(m.id)!==String(id)); setSyncStatus('live'); }
+  render();
+}
+
+// ── SONG ACTIONS ───────────────────────────────────────────────
+async function deleteSong(id){
+  if(!confirm('Remove this song?')) return;
+  setSyncStatus('syncing');
+  const {error} = await sb.from('songs').delete().eq('id',String(id));
+  if(error){ toast('Error deleting','error'); setSyncStatus('error'); }
+  else { state.songs=state.songs.filter(s=>String(s.id)!==String(id)); setSyncStatus('live'); }
+  render();
+}
+
+async function moveSong(id, status){
+  const s = state.songs.find(x=>String(x.id)===String(id));
+  if(!s) return;
+  s.status = status;
+  await sb.from('songs').update({status}).eq('id',String(id));
+  render();
+}
+
+function setSongTab(tab){ state.songTab=tab; render(); }
+
+// ── DRAG & DROP ────────────────────────────────────────────────
+let dragSrcId = null;
+function dragStart(e,id){ dragSrcId=id; e.dataTransfer.effectAllowed='move'; }
+function dragOver(e,id){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+
+function dropSong(e,id){
+  e.currentTarget.classList.remove('drag-over');
+  if(String(dragSrcId)===String(id)) return;
+  const src=state.songs.find(s=>String(s.id)===String(dragSrcId));
+  const tgt=state.songs.find(s=>String(s.id)===String(id));
+  if(!src||!tgt) return;
+  [src.order,tgt.order]=[tgt.order,src.order];
+  if(getSb()){ sb.from('songs').update({sort_order:src.order}).eq('id',String(src.id)); sb.from('songs').update({sort_order:tgt.order}).eq('id',String(tgt.id)); }
+  render();
+}
+
+function dropSetlist(e,id){
+  e.currentTarget.classList.remove('drag-over');
+  if(String(dragSrcId)===String(id)) return;
+  const sl = state.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const si = sl.findIndex(s=>String(s.id)===String(dragSrcId));
+  const ti = sl.findIndex(s=>String(s.id)===String(id));
+  if(si<0||ti<0) return;
+  const [moved] = sl.splice(si,1);
+  sl.splice(ti,0,moved);
+  sl.forEach((s,i)=>{ s.order=i+1; if(getSb()) sb.from('songs').update({sort_order:i+1}).eq('id',String(s.id)); });
+  render();
+}
+
+// ── PDF EXPORTS ────────────────────────────────────────────────
+function getPdf(){ if(typeof window.jspdf==='undefined'){toast('PDF library still loading, try again','error');return null;} return new window.jspdf.jsPDF(); }
+
+function exportSetlistPDF(){
+  const doc=getPdf(); if(!doc) return;
+  const songs=state.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text('SET LIST',20,24);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);
+  doc.text(new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),20,32);
+  doc.setDrawColor(200,200,200);doc.line(20,36,190,36);doc.setTextColor(0,0,0);
+  let y=46;
+  songs.forEach((s,i)=>{
+    if(y>270){doc.addPage();y=20;}
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text((i+1)+'.  '+s.title,20,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(100,100,100);
+    doc.text([s.artist,s.key?'Key: '+s.key:'',s.singer?'Singer: '+s.singer:'',s.bpm?s.bpm+' BPM':''].filter(Boolean).join('  ·  '),28,y+6);
+    doc.setTextColor(0,0,0);y+=18;
+  });
+  doc.save('setlist.pdf');toast('PDF downloaded','success');
+}
+
+function exportSingleChartPDF(id){
+  const doc=getPdf(); if(!doc) return;
+  const s=state.songs.find(x=>String(x.id)===String(id)); if(!s) return;
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(s.title,20,22);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(120,120,120);
+  doc.text([s.artist,'Key: '+(s.key||'?'),'Singer: '+(s.singer||'?'),s.bpm?s.bpm+' BPM':''].filter(Boolean).join('  ·  '),20,30);
+  doc.setDrawColor(200,200,200);doc.line(20,34,190,34);doc.setTextColor(0,0,0);
+  if(s.chart&&s.chart.trim()){
+    doc.setFont('courier','normal');doc.setFontSize(11);
+    const lines=doc.splitTextToSize(s.chart,170);let y=44;
+    lines.forEach(l=>{if(y>280){doc.addPage();y=20;}doc.text(l,20,y);y+=6;});
+  }
+  if(s.chartImg){doc.addPage();doc.setFontSize(14);doc.text(s.title+' — Chart Image',20,20);try{doc.addImage(s.chartImg,'JPEG',20,30,170,200);}catch(e){}}
+  doc.save(s.title.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'_chart.pdf');
+  toast('Chart PDF downloaded','success');
+}
+
+function exportAllChartsPDF(){
+  const doc=getPdf(); if(!doc) return;
+  const songs=state.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  if(!songs.length){toast('No songs in set list','error');return;}
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text('CHORD CHARTS',20,24);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);
+  doc.text('Set List · '+songs.length+' songs',20,32);
+  doc.setDrawColor(200,200,200);doc.line(20,36,190,36);
+  let y=46;doc.setTextColor(0,0,0);
+  songs.forEach((s,i)=>{doc.setFontSize(11);doc.setTextColor(100,100,100);doc.text((i+1)+'.  '+s.title+'  ('+( s.key||'?')+' · '+(s.singer||'?')+')',20,y);y+=8;});
+  songs.forEach((s,i)=>{
+    doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(0,0,0);doc.text((i+1)+'. '+s.title,20,22);
+    doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(120,120,120);
+    doc.text([s.artist,'Key: '+(s.key||'?'),'Singer: '+(s.singer||'?'),s.bpm?s.bpm+' BPM':''].filter(Boolean).join('  ·  '),20,30);
+    doc.setDrawColor(200,200,200);doc.line(20,34,190,34);doc.setTextColor(0,0,0);
+    if(s.chart&&s.chart.trim()){
+      doc.setFont('courier','normal');doc.setFontSize(10);
+      const lines=doc.splitTextToSize(s.chart,170);let cy=44;
+      lines.forEach(l=>{if(cy>280){doc.addPage();cy=20;}doc.text(l,20,cy);cy+=5.5;});
+    } else if(!s.chartImg){doc.setFont('helvetica','italic');doc.setFontSize(12);doc.setTextColor(160,160,160);doc.text('No chart added yet.',20,50);}
+    if(s.chartImg){doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(0,0,0);doc.text(s.title+' — Image',20,20);try{doc.addImage(s.chartImg,'JPEG',20,30,170,210);}catch(e){}}
+  });
+  doc.save('all_charts.pdf');toast('All charts PDF downloaded','success');
+}
+
+function exportSchedulePDF(){
+  const doc=getPdf(); if(!doc) return;
+  const today=new Date(new Date().toDateString());
+  const upcoming=state.gigs.filter(g=>new Date(g.date+'T12:00:00')>=today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text('GIG SCHEDULE',20,24);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);
+  doc.text(upcoming.length+' upcoming · As of '+new Date().toLocaleDateString(),20,32);
+  doc.setDrawColor(200,200,200);doc.line(20,36,190,36);doc.setTextColor(0,0,0);
+  let y=46;
+  upcoming.forEach(g=>{
+    if(y>270){doc.addPage();y=20;}
+    const d=new Date(g.date+'T12:00:00');
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text(g.venue,20,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(100,100,100);
+    doc.text([d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),g.time||'',g.city||''].filter(Boolean).join('  ·  '),20,y+6);
+    if(g.notes){doc.setTextColor(140,140,140);doc.text(g.notes,20,y+12);y+=6;}
+    doc.setTextColor(0,0,0);y+=22;
+  });
+  doc.save('schedule.pdf');toast('Schedule PDF downloaded','success');
+}
+
+// ── SWIPE ──────────────────────────────────────────────────────
+let touchX=null;
+document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;});
+document.addEventListener('touchend',e=>{
+  if(touchX===null) return;
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(state.view==='chords'&&Math.abs(dx)>50){
+    const all=[...state.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order),...state.songs.filter(s=>s.status!=='setlist')];
+    if(dx<0) nextChord(all.length); else prevChord();
+  }
+  touchX=null;
+});
+
+// ── RENDER ─────────────────────────────────────────────────────
+function render(){
+  q('nav').innerHTML = renderNav();
+  if(!state.loaded){ q('app').innerHTML='<div class="loading-screen"><div class="spin" style="font-size:32px">⟳</div><p>Connecting...</p></div>'; return; }
+  let html='';
+  if(state.view==='songs') html=songsView();
+  else if(state.view==='setlist') html=setlistView();
+  else if(state.view==='chords') html=chordsView();
+  else if(state.view==='schedule') html=scheduleView();
+  else if(state.view==='members') html=membersView();
+  q('app').innerHTML = html;
+}
+
+// ── BOOT ───────────────────────────────────────────────────────
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { render(); loadAll(); });
+} else {
+  render();
+  loadAll();
+}
+</script>
+
+
+</body></html>
