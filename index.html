@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Bandmate"/>
+<title>Bandmate Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ── SHARED ───────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0e0e10;--bg2:#16161a;--bg3:#1e1e24;--bg4:#26262e;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0efe8;--text2:#a09e96;--text3:#6e6c66;
+  --accent:#e8c14a;--accent2:#c9a530;
+  --green:#4caf82;--blue:#4a9edd;--red:#e05252;--purple:#9b7fe8;
+  --font-head:'Bebas Neue',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --r:8px;--rl:12px;
+  --nav-h:68px;--header-h:56px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px}
+.hidden{display:none!important}
+input,select,textarea{font-family:var(--font-body)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+
+/* ── DESKTOP STYLES (screens > 768px) ──────────────────────── */
+@media (min-width:769px){
+  #mobile-root{display:none!important}
+  body{min-height:100vh;overflow-x:hidden}
+
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:16px;height:56px;position:sticky;top:0;z-index:100}
+  .logo{font-family:var(--font-head);font-size:26px;letter-spacing:2px;color:var(--accent);flex-shrink:0;cursor:pointer}
+  .logo span{color:var(--text2);font-size:14px;letter-spacing:1px;margin-left:4px;font-family:var(--font-body);font-weight:300}
+  .sync-indicator{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);flex-shrink:0;margin-left:auto}
+  .d-sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:background .4s}
+  .d-sync-dot.live{background:var(--green)}.d-sync-dot.syncing{background:var(--accent)}.d-sync-dot.error{background:var(--red)}
+  .d-nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .d-nav::-webkit-scrollbar{display:none}
+  .d-nav-btn{padding:6px 14px;border-radius:var(--r);border:1px solid transparent;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s}
+  .d-nav-btn:hover{background:var(--bg3);color:var(--text)}
+  .d-nav-btn.active{background:var(--bg4);color:var(--accent);border-color:var(--border2)}
+  .d-nav-btn .badge{background:var(--bg);color:var(--text3);border-radius:20px;padding:1px 6px;font-size:11px;font-family:var(--font-mono)}
+  .d-nav-btn.active .badge{background:rgba(232,193,74,0.15);color:var(--accent)}
+  .d-main{padding:20px;max-width:1100px;margin:0 auto}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  .section-title{font-family:var(--font-head);font-size:32px;letter-spacing:2px}
+  .section-sub{color:var(--text3);font-size:12px;margin-top:2px}
+  .d-btn{padding:7px 14px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+  .d-btn:hover{background:var(--bg4)}
+  .d-btn.primary{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:600}
+  .d-btn.primary:hover{background:var(--accent2)}
+  .d-btn.danger{color:var(--red);border-color:rgba(224,82,82,0.3)}
+  .d-btn.danger:hover{background:rgba(224,82,82,0.1)}
+  .d-btn.small{padding:4px 10px;font-size:12px}
+  .d-btn.icon-only{padding:6px 8px}
+  .d-btn:disabled{opacity:.3;cursor:not-allowed}
+  input.d-inp,select.d-inp,textarea.d-inp{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:7px 10px;font-size:13px;outline:none;transition:border-color .15s}
+  input.d-inp:focus,select.d-inp:focus,textarea.d-inp:focus{border-color:var(--accent)}
+  input.d-inp::placeholder,textarea.d-inp::placeholder{color:var(--text3)}
+  select.d-inp option{background:var(--bg3)}
+  textarea.d-inp{resize:vertical;min-height:80px;width:100%}
+  .d-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+  .d-modal-overlay.open{display:flex}
+  .d-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+  .d-modal-title{font-family:var(--font-head);font-size:22px;letter-spacing:1px;margin-bottom:20px}
+  .d-form-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .d-form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
+  .d-form-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+  .d-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+  .d-songs-list{display:flex;flex-direction:column;gap:8px}
+  .d-song-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+  .d-song-card:hover{border-color:var(--border2)}
+  .drag-handle{color:var(--text3);cursor:grab;font-size:18px;flex-shrink:0;line-height:1}
+  .song-num{font-family:var(--font-mono);font-size:11px;color:var(--text3);width:22px;text-align:right;flex-shrink:0}
+  .song-info{flex:1;min-width:0}
+  .song-title{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .song-artist{font-size:12px;color:var(--text2)}
+  .song-meta{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+  .pill{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;font-family:var(--font-mono);white-space:nowrap}
+  .pill.key{background:rgba(74,158,221,0.15);color:#6ab8f0;border:1px solid rgba(74,158,221,0.2)}
+  .pill.singer{background:rgba(155,127,232,0.15);color:#b89ff0;border:1px solid rgba(155,127,232,0.2)}
+  .pill.bpm{background:rgba(76,175,130,0.15);color:#6dd4a8;border:1px solid rgba(76,175,130,0.2)}
+  .pill.has-chart{background:rgba(160,158,150,0.1);color:var(--text2);border:1px solid var(--border);font-size:10px}
+  .d-status-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .d-status-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s}
+  .d-status-tab:hover{background:var(--bg3)}
+  .d-status-tab.active-all{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+  .d-status-tab.active-setlist{background:rgba(76,175,130,0.15);color:var(--green);border-color:rgba(76,175,130,0.3)}
+  .d-status-tab.active-backup{background:rgba(74,158,221,0.15);color:var(--blue);border-color:rgba(74,158,221,0.3)}
+  .d-status-tab.active-requests{background:rgba(232,193,74,0.15);color:var(--accent);border-color:rgba(232,193,74,0.3)}
+  .d-filters{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+  .d-filters input{flex:1;min-width:160px}
+  .setlist-num{font-family:var(--font-mono);font-size:18px;color:var(--accent);width:28px;text-align:center;flex-shrink:0;font-weight:700}
+  .d-gigs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .d-gig-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+  .d-gig-card:hover{border-color:var(--border2)}
+  .gig-date-txt{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
+  .gig-venue{font-weight:500;font-size:15px;margin-bottom:4px}
+  .gig-detail{font-size:12px;color:var(--text2);margin-bottom:12px}
+  .gig-footer{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .d-chord-viewer{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);min-height:420px;display:flex;flex-direction:column}
+  .d-chord-nav{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .d-chord-content{flex:1;padding:24px;font-family:var(--font-mono);font-size:13px;line-height:1.8;white-space:pre-wrap;overflow-y:auto}
+  .d-chord-file{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden}
+  .d-chord-file img{max-width:100%;max-height:500px;border-radius:var(--r);object-fit:contain}
+  .d-chord-file iframe{width:100%;height:560px;border:none;border-radius:var(--r);background:#fff}
+  .d-chord-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:10px;padding:40px;text-align:center}
+  .d-chord-progress{display:flex;gap:4px;flex-wrap:wrap}
+  .d-chord-dot{width:8px;height:8px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);cursor:pointer;transition:all .15s}
+  .d-chord-dot.active{background:var(--accent);border-color:var(--accent)}
+  .d-chord-dot.has-chart{background:var(--bg3)}
+  .d-chart-mode-tabs{display:flex;gap:3px;background:var(--bg3);border-radius:var(--r);padding:3px}
+  .d-chart-mode-tab{padding:4px 12px;border-radius:6px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--font-body);font-weight:500;transition:all .15s}
+  .d-chart-mode-tab.active{background:var(--bg4);color:var(--accent)}
+  .d-empty{text-align:center;padding:60px 20px;color:var(--text3)}
+  .d-empty p{font-size:14px;max-width:300px;margin:0 auto 16px}
+  .d-divider{height:1px;background:var(--border);margin:16px 0}
+  .d-key-group-header{font-family:var(--font-mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 0 6px;display:flex;align-items:center;gap:8px}
+  .d-key-group-header::after{content:'';flex:1;height:1px;background:var(--border)}
+  .d-drag-over{border:1px dashed var(--accent)!important;opacity:.7}
+  .d-member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+  .d-member-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;display:flex;flex-direction:column;gap:10px}
+  .d-member-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+  .d-member-header{display:flex;align-items:center;gap:12px}
+  .d-stat-pill{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-size:12px;color:var(--text2)}
+  .d-upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .15s;color:var(--text3)}
+  .d-upload-zone:hover{border-color:var(--accent)}
+  .d-upload-zone.has-file{border-style:solid;border-color:var(--green);padding:10px}
+  .d-toast{position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border2);color:var(--text);padding:10px 16px;border-radius:var(--r);font-size:13px;z-index:9999;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .25s;pointer-events:none}
+  .d-toast.show{opacity:1}
+  .d-status-selector{display:flex;gap:8px;margin-top:6px}
+  .d-status-opt{flex:1;padding:8px 6px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font-body);cursor:pointer;text-align:center}
+  .d-status-opt.active-setlist{background:rgba(76,175,130,0.15);color:var(--green);border-color:rgba(76,175,130,0.3)}
+  .d-status-opt.active-backup{background:rgba(74,158,221,0.15);color:var(--blue);border-color:rgba(74,158,221,0.3)}
+  .d-status-opt.active-requests{background:rgba(232,193,74,0.15);color:var(--accent);border-color:rgba(232,193,74,0.3)}
+}
+
+/* ── MOBILE STYLES (screens <= 768px) ──────────────────────── */
+@media (max-width:768px){
+  #desktop-root{display:none!important}
+  html,body{height:100%;overflow:hidden}
+  #mobile-root{display:flex;flex-direction:column;height:100%;height:100dvh}
+  .m-header{height:calc(var(--header-h) + var(--safe-top));padding-top:var(--safe-top);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding-left:16px;padding-right:16px;flex-shrink:0;position:relative;z-index:50}
+  .m-header-title{font-size:17px;font-weight:700;letter-spacing:.3px}
+  .m-header-sub{font-size:12px;color:var(--text3);margin-top:1px;display:flex;align-items:center;gap:4px}
+  .m-sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:background .4s;display:inline-block}
+  .m-sync-dot.live{background:var(--green)}.m-sync-dot.syncing{background:var(--accent)}.m-sync-dot.error{background:var(--red)}
+  .m-header-action{background:var(--accent);color:#0e0e10;border:none;border-radius:22px;padding:8px 16px;font-size:14px;font-weight:700;font-family:var(--font-body);cursor:pointer}
+  .m-page{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 8px)}
+  .m-bottom-nav{height:calc(var(--nav-h) + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;flex-shrink:0;position:relative;z-index:50}
+  .m-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;color:var(--text3);font-family:var(--font-body);font-size:10px;font-weight:500;transition:color .15s;padding:8px 4px}
+  .m-nav-item.active{color:var(--accent)}
+  .m-nav-icon{font-size:22px;line-height:1}
+  .m-section-pad{padding:16px}
+  .m-section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:4px}
+  .m-song-row{background:var(--bg2);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;border:1px solid var(--border);cursor:pointer;-webkit-user-select:none}
+  .m-song-row:active{background:var(--bg3)}
+  .m-song-row-left{flex:1;min-width:0}
+  .m-song-title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .m-song-artist{font-size:12px;color:var(--text2);margin-top:2px}
+  .m-song-meta{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .m-chip{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;font-family:var(--font-mono)}
+  .m-chip.key{background:rgba(74,158,221,0.15);color:#6ab8f0}
+  .m-chip.singer{background:rgba(155,127,232,0.15);color:#b89ff0}
+  .m-chip.bpm{background:rgba(76,175,130,0.15);color:#6dd4a8}
+  .m-chip.chart{background:rgba(232,193,74,0.1);color:var(--accent)}
+  .m-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .m-search-bar{padding:12px 16px 0}
+  .m-search-input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:10px 14px;font-size:15px;outline:none}
+  .m-filter-row{display:flex;gap:8px;padding:10px 16px 0;overflow-x:auto;scrollbar-width:none}
+  .m-filter-row::-webkit-scrollbar{display:none}
+  .m-filter-chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:500;font-family:var(--font-body);white-space:nowrap;cursor:pointer;flex-shrink:0}
+  .m-filter-chip.active-all{background:var(--bg3);color:var(--text)}
+  .m-filter-chip.active-setlist{background:rgba(76,175,130,0.15);color:var(--green);border-color:rgba(76,175,130,0.3)}
+  .m-filter-chip.active-backup{background:rgba(74,158,221,0.15);color:var(--blue);border-color:rgba(74,158,221,0.3)}
+  .m-filter-chip.active-requests{background:rgba(232,193,74,0.15);color:var(--accent);border-color:rgba(232,193,74,0.3)}
+  .m-gig-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+  .m-gig-date{font-size:11px;font-weight:600;color:var(--accent);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+  .m-gig-venue{font-size:17px;font-weight:700;margin-bottom:3px}
+  .m-gig-meta{font-size:13px;color:var(--text2)}
+  .m-chord-viewer{display:flex;flex-direction:column;height:100%}
+  .m-chord-song-info{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+  .m-chord-song-title{font-size:18px;font-weight:700}
+  .m-chord-song-meta{font-size:13px;color:var(--text2);margin-top:3px}
+  .m-chord-mode-bar{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2)}
+  .m-chord-mode-btn{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:600;font-family:var(--font-body);cursor:pointer}
+  .m-chord-mode-btn.active{background:var(--accent);color:#0e0e10;border-color:var(--accent)}
+  .m-chord-text{flex:1;padding:16px;font-family:var(--font-mono);font-size:13px;line-height:1.9;overflow-y:auto;white-space:pre-wrap;-webkit-overflow-scrolling:touch}
+  .m-chord-file{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}
+  .m-chord-file img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+  .m-chord-file iframe{width:100%;height:100%;border:none;border-radius:8px;background:#fff}
+  .m-chord-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);padding:32px;text-align:center}
+  .m-chord-nav-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg2);padding-bottom:calc(10px + var(--safe-bottom))}
+  .m-chord-nav-btn{width:48px;height:48px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .m-chord-nav-btn:disabled{opacity:.25}
+  .m-chord-dots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;max-width:200px}
+  .m-chord-dot{width:7px;height:7px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);cursor:pointer}
+  .m-chord-dot.active{background:var(--accent)}
+  .m-chord-dot.has-chart{background:var(--bg3)}
+  .m-member-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer}
+  .m-member-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+  .m-member-name{font-size:16px;font-weight:700}
+  .m-member-role{font-size:13px;color:var(--text2);margin-top:2px}
+  .m-member-stats{font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--font-mono)}
+  .m-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:flex-end;justify-content:center}
+  .m-sheet-overlay.open{display:flex}
+  .m-sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:92dvh;overflow-y:auto;padding:20px 20px calc(20px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
+  .m-sheet-handle{width:40px;height:4px;background:var(--bg4);border-radius:2px;margin:0 auto 20px}
+  .m-sheet-title{font-size:20px;font-weight:700;margin-bottom:20px}
+  .m-form-field{margin-bottom:14px}
+  .m-form-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+  .m-form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+  .m-form-input:focus{border-color:var(--accent)}
+  .m-form-input::placeholder{color:var(--text3)}
+  .m-form-row{display:flex;gap:10px}
+  .m-form-row .m-form-field{flex:1}
+  textarea.m-form-input{min-height:100px;resize:none;font-size:14px;line-height:1.6}
+  .m-btn-full{width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:700;font-family:var(--font-body);cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .m-btn-full.primary{background:var(--accent);color:#0e0e10}
+  .m-btn-full.secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border2);font-weight:500}
+  .m-btn-full.danger{background:rgba(224,82,82,0.12);color:var(--red);border:1px solid rgba(224,82,82,0.2);font-weight:500}
+  .m-btn-sm{padding:8px 16px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-weight:500;font-family:var(--font-body);cursor:pointer}
+  .m-upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;color:var(--text3);margin-top:6px}
+  .m-upload-zone.has-file{border-style:solid;border-color:var(--green);background:rgba(76,175,130,0.05)}
+  .m-status-selector{display:flex;gap:8px;margin-top:6px}
+  .m-status-opt{flex:1;padding:10px 6px;border-radius:12px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font-body);cursor:pointer;text-align:center;line-height:1.3}
+  .m-status-opt.active-setlist{background:rgba(76,175,130,0.15);color:var(--green);border-color:rgba(76,175,130,0.3)}
+  .m-status-opt.active-backup{background:rgba(74,158,221,0.15);color:var(--blue);border-color:rgba(74,158,221,0.3)}
+  .m-status-opt.active-requests{background:rgba(232,193,74,0.15);color:var(--accent);border-color:rgba(232,193,74,0.3)}
+  .m-setlist-num{font-family:var(--font-mono);font-size:20px;color:var(--accent);width:32px;text-align:center;flex-shrink:0;font-weight:700}
+  .m-divider{height:1px;background:var(--border);margin:8px 0 14px}
+  .m-empty{text-align:center;padding:48px 24px;color:var(--text3)}
+  .m-toast{position:fixed;top:calc(var(--header-h) + var(--safe-top) + 10px);left:16px;right:16px;background:var(--bg4);border:1px solid var(--border2);color:var(--text);padding:12px 16px;border-radius:14px;font-size:14px;z-index:999;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .25s;pointer-events:none;font-weight:500}
+  .m-toast.show{opacity:1}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- DESKTOP LAYOUT                                              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="desktop-root">
+  <div class="topbar">
+    <div class="logo" onclick="dNavigate('songs')">🎸 BANDMATE <span>PRO</span></div>
+    <nav class="d-nav" id="d-nav"></nav>
+    <div class="sync-indicator"><div class="d-sync-dot" id="d-sync-dot"></div><span id="d-sync-label">Connecting...</span></div>
+  </div>
+  <div class="d-main" id="d-app">
+    <div class="d-empty"><p>Loading...</p></div>
+  </div>
+  <div class="d-toast" id="d-toast"></div>
+
+  <!-- Desktop Song Modal -->
+  <div class="d-modal-overlay" id="d-song-modal" onclick="if(event.target===this)dCloseModal('d-song-modal')">
+    <div class="d-modal">
+      <div class="d-modal-title" id="d-song-modal-title">ADD SONG</div>
+      <div class="d-form-row"><div class="d-form-group" style="flex:2"><label class="d-form-label">Song Title *</label><input class="d-inp" id="d-f-title" placeholder="Song title"/></div></div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Artist</label><input class="d-inp" id="d-f-artist" placeholder="Original artist"/></div></div>
+      <div class="d-form-row">
+        <div class="d-form-group"><label class="d-form-label">Key</label><select class="d-inp" id="d-f-key"></select></div>
+        <div class="d-form-group"><label class="d-form-label">Singer</label><select class="d-inp" id="d-f-singer"></select></div>
+        <div class="d-form-group"><label class="d-form-label">BPM</label><input class="d-inp" id="d-f-bpm" type="number" placeholder="120" style="width:100%"/></div>
+      </div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Status</label>
+        <div class="d-status-selector">
+          <button class="d-status-opt" id="d-opt-setlist" onclick="dSelectStatus('setlist')">✅ Set List</button>
+          <button class="d-status-opt" id="d-opt-backup" onclick="dSelectStatus('backup')">📦 Backup</button>
+          <button class="d-status-opt" id="d-opt-requests" onclick="dSelectStatus('requests')">⭐ Request</button>
+        </div>
+      </div></div>
+      <div id="d-req-fields" class="hidden">
+        <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Requested By</label><select class="d-inp" id="d-f-requestedBy"></select></div></div>
+        <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Note</label><input class="d-inp" id="d-f-requestNote" placeholder="Why this song?"/></div></div>
+      </div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Chord Chart / Lyrics</label><textarea class="d-inp" id="d-f-chart" placeholder="Paste chords or lyrics..."></textarea></div></div>
+      <div class="d-form-row">
+        <div class="d-form-group">
+          <label class="d-form-label">Chart Image</label>
+          <div class="d-upload-zone" id="d-img-zone" onclick="document.getElementById('d-f-img').click()"><div id="d-img-zone-inner">📷 Click to upload image<br><small style="color:var(--text3)">JPG or PNG</small></div></div>
+          <input type="file" id="d-f-img" accept="image/*" style="display:none" onchange="dHandleImg(event)"/>
+          <button class="d-btn small danger" id="d-clear-img-btn" style="display:none;margin-top:6px;width:100%" onclick="dClearImg()">✕ Remove Image</button>
+        </div>
+        <div class="d-form-group">
+          <label class="d-form-label">Chart PDF</label>
+          <div class="d-upload-zone" id="d-pdf-zone" onclick="document.getElementById('d-f-pdf').click()"><div id="d-pdf-zone-inner">📄 Click to upload PDF<br><small style="color:var(--text3)">PDF chart or lead sheet</small></div></div>
+          <input type="file" id="d-f-pdf" accept="application/pdf" style="display:none" onchange="dHandlePdf(event)"/>
+          <button class="d-btn small danger" id="d-clear-pdf-btn" style="display:none;margin-top:6px;width:100%" onclick="dClearPdf()">✕ Remove PDF</button>
+        </div>
+      </div>
+      <div class="d-modal-actions">
+        <button class="d-btn danger" id="d-delete-song-btn" style="display:none;margin-right:auto" onclick="dDeleteSongModal()">✕ Delete</button>
+        <button class="d-btn" onclick="dCloseModal('d-song-modal')">Cancel</button>
+        <button class="d-btn primary" onclick="dSaveSong()">✓ Save Song</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Gig Modal -->
+  <div class="d-modal-overlay" id="d-gig-modal" onclick="if(event.target===this)dCloseModal('d-gig-modal')">
+    <div class="d-modal">
+      <div class="d-modal-title" id="d-gig-modal-title">ADD GIG</div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Venue *</label><input class="d-inp" id="d-g-venue" placeholder="Bar name or venue"/></div></div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">City</label><input class="d-inp" id="d-g-city" placeholder="City, State"/></div></div>
+      <div class="d-form-row">
+        <div class="d-form-group"><label class="d-form-label">Date *</label><input class="d-inp" id="d-g-date" type="date"/></div>
+        <div class="d-form-group"><label class="d-form-label">Time</label><input class="d-inp" id="d-g-time" type="time"/></div>
+      </div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Notes</label><input class="d-inp" id="d-g-notes" placeholder="Pay, contact..."/></div></div>
+      <div class="d-modal-actions">
+        <button class="d-btn danger" id="d-delete-gig-btn" style="display:none;margin-right:auto" onclick="dDeleteGigModal()">✕ Delete</button>
+        <button class="d-btn" onclick="dCloseModal('d-gig-modal')">Cancel</button>
+        <button class="d-btn primary" onclick="dSaveGig()">✓ Save Gig</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Member Modal -->
+  <div class="d-modal-overlay" id="d-member-modal" onclick="if(event.target===this)dCloseModal('d-member-modal')">
+    <div class="d-modal">
+      <div class="d-modal-title" id="d-member-modal-title">ADD MEMBER</div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Name *</label><input class="d-inp" id="d-m-name" placeholder="Name or nickname"/></div></div>
+      <div class="d-form-row"><div class="d-form-group"><label class="d-form-label">Role / Instrument</label><input class="d-inp" id="d-m-role" placeholder="e.g. Guitar / Vocals"/></div></div>
+      <div class="d-modal-actions">
+        <button class="d-btn danger" id="d-delete-member-btn" style="display:none;margin-right:auto" onclick="dDeleteMemberModal()">✕ Remove</button>
+        <button class="d-btn" onclick="dCloseModal('d-member-modal')">Cancel</button>
+        <button class="d-btn primary" onclick="dSaveMember()">✓ Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MOBILE LAYOUT                                               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="mobile-root">
+  <div class="m-header">
+    <div>
+      <div class="m-header-title" id="m-header-title">🎸 Bandmate</div>
+      <div class="m-header-sub"><span class="m-sync-dot" id="m-sync-dot"></span><span id="m-sync-label">Connecting...</span></div>
+    </div>
+    <button class="m-header-action" id="m-header-btn" onclick="mHeaderAction()" style="display:none">+ Add</button>
+  </div>
+  <div class="m-page" id="m-page">
+    <div class="m-empty"><div class="spin" style="font-size:32px">⟳</div><div style="margin-top:12px;font-size:15px;color:var(--text3)">Loading...</div></div>
+  </div>
+  <nav class="m-bottom-nav">
+    <button class="m-nav-item active" id="m-nav-songs" onclick="mNavigate('songs')"><span class="m-nav-icon">🎵</span><span>Songs</span></button>
+    <button class="m-nav-item" id="m-nav-setlist" onclick="mNavigate('setlist')"><span class="m-nav-icon">📋</span><span>Set List</span></button>
+    <button class="m-nav-item" id="m-nav-chords" onclick="mNavigate('chords')"><span class="m-nav-icon">📄</span><span>Charts</span></button>
+    <button class="m-nav-item" id="m-nav-schedule" onclick="mNavigate('schedule')"><span class="m-nav-icon">📅</span><span>Schedule</span></button>
+    <button class="m-nav-item" id="m-nav-members" onclick="mNavigate('members')"><span class="m-nav-icon">👥</span><span>Band</span></button>
+  </nav>
+  <div class="m-toast" id="m-toast"></div>
+
+  <!-- Mobile Song Sheet -->
+  <div class="m-sheet-overlay" id="m-song-sheet" onclick="if(event.target===this)mCloseSheet('m-song-sheet')">
+    <div class="m-sheet">
+      <div class="m-sheet-handle"></div>
+      <div class="m-sheet-title" id="m-song-sheet-title">Add Song</div>
+      <div class="m-form-field"><label class="m-form-label">Song Title *</label><input class="m-form-input" id="m-f-title" placeholder="Song title" autocomplete="off"/></div>
+      <div class="m-form-field"><label class="m-form-label">Artist</label><input class="m-form-input" id="m-f-artist" placeholder="Original artist" autocomplete="off"/></div>
+      <div class="m-form-row">
+        <div class="m-form-field"><label class="m-form-label">Key</label><select class="m-form-input" id="m-f-key"></select></div>
+        <div class="m-form-field"><label class="m-form-label">BPM</label><input class="m-form-input" id="m-f-bpm" type="number" placeholder="120"/></div>
+      </div>
+      <div class="m-form-field"><label class="m-form-label">Lead Singer</label><select class="m-form-input" id="m-f-singer"></select></div>
+      <div class="m-form-field"><label class="m-form-label">Status</label>
+        <div class="m-status-selector">
+          <button class="m-status-opt" id="m-opt-setlist" onclick="mSelectStatus('setlist')">✅ Set List</button>
+          <button class="m-status-opt" id="m-opt-backup" onclick="mSelectStatus('backup')">📦 Backup</button>
+          <button class="m-status-opt" id="m-opt-requests" onclick="mSelectStatus('requests')">⭐ Request</button>
+        </div>
+      </div>
+      <div id="m-req-fields" class="hidden">
+        <div class="m-form-field"><label class="m-form-label">Requested By</label><select class="m-form-input" id="m-f-requestedBy"></select></div>
+        <div class="m-form-field"><label class="m-form-label">Note</label><input class="m-form-input" id="m-f-requestNote" placeholder="Why this song?" autocomplete="off"/></div>
+      </div>
+      <div class="m-form-field"><label class="m-form-label">Chord Chart / Lyrics</label><textarea class="m-form-input" id="m-f-chart" placeholder="Paste chords or lyrics..."></textarea></div>
+      <div class="m-form-field">
+        <label class="m-form-label">Chart Image</label>
+        <div class="m-upload-zone" id="m-img-zone" onclick="document.getElementById('m-f-img').click()"><div id="m-img-zone-inner"><div style="font-size:24px">📷</div><div style="font-size:14px;font-weight:500;margin-top:4px">Tap to upload image</div><div style="font-size:12px;color:var(--text3);margin-top:2px">JPG or PNG</div></div></div>
+        <input type="file" id="m-f-img" accept="image/*" style="display:none" onchange="mHandleImg(event)"/>
+        <button class="m-btn-full danger" id="m-clear-img-btn" style="display:none;margin-top:8px" onclick="mClearImg()">✕ Remove Image</button>
+      </div>
+      <div class="m-form-field">
+        <label class="m-form-label">Chart PDF</label>
+        <div class="m-upload-zone" id="m-pdf-zone" onclick="document.getElementById('m-f-pdf').click()"><div id="m-pdf-zone-inner"><div style="font-size:24px">📄</div><div style="font-size:14px;font-weight:500;margin-top:4px">Tap to upload PDF</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Chord chart or lead sheet</div></div></div>
+        <input type="file" id="m-f-pdf" accept="application/pdf" style="display:none" onchange="mHandlePdf(event)"/>
+        <button class="m-btn-full danger" id="m-clear-pdf-btn" style="display:none;margin-top:8px" onclick="mClearPdf()">✕ Remove PDF</button>
+      </div>
+      <button class="m-btn-full primary" onclick="mSaveSong()" style="margin-top:12px">Save Song</button>
+      <button class="m-btn-full secondary" onclick="mCloseSheet('m-song-sheet')" style="margin-top:8px">Cancel</button>
+      <button class="m-btn-full danger" id="m-delete-song-btn" style="display:none;margin-top:8px" onclick="mDeleteSong()">Delete Song</button>
+    </div>
+  </div>
+
+  <!-- Mobile Gig Sheet -->
+  <div class="m-sheet-overlay" id="m-gig-sheet" onclick="if(event.target===this)mCloseSheet('m-gig-sheet')">
+    <div class="m-sheet">
+      <div class="m-sheet-handle"></div>
+      <div class="m-sheet-title" id="m-gig-sheet-title">Add Gig</div>
+      <div class="m-form-field"><label class="m-form-label">Venue *</label><input class="m-form-input" id="m-g-venue" placeholder="Bar or venue name" autocomplete="off"/></div>
+      <div class="m-form-field"><label class="m-form-label">City</label><input class="m-form-input" id="m-g-city" placeholder="City, State" autocomplete="off"/></div>
+      <div class="m-form-row">
+        <div class="m-form-field"><label class="m-form-label">Date *</label><input class="m-form-input" id="m-g-date" type="date"/></div>
+        <div class="m-form-field"><label class="m-form-label">Time</label><input class="m-form-input" id="m-g-time" type="time"/></div>
+      </div>
+      <div class="m-form-field"><label class="m-form-label">Notes</label><input class="m-form-input" id="m-g-notes" placeholder="Pay, contact info..." autocomplete="off"/></div>
+      <button class="m-btn-full primary" onclick="mSaveGig()" style="margin-top:12px">Save Gig</button>
+      <button class="m-btn-full secondary" onclick="mCloseSheet('m-gig-sheet')" style="margin-top:8px">Cancel</button>
+      <button class="m-btn-full danger" id="m-delete-gig-btn" style="display:none;margin-top:8px" onclick="mDeleteGig()">Delete Gig</button>
+    </div>
+  </div>
+
+  <!-- Mobile Member Sheet -->
+  <div class="m-sheet-overlay" id="m-member-sheet" onclick="if(event.target===this)mCloseSheet('m-member-sheet')">
+    <div class="m-sheet">
+      <div class="m-sheet-handle"></div>
+      <div class="m-sheet-title" id="m-member-sheet-title">Add Member</div>
+      <div class="m-form-field"><label class="m-form-label">Name *</label><input class="m-form-input" id="m-m-name" placeholder="First name or nickname" autocomplete="off"/></div>
+      <div class="m-form-field"><label class="m-form-label">Role / Instrument</label><input class="m-form-input" id="m-m-role" placeholder="e.g. Guitar / Vocals" autocomplete="off"/></div>
+      <button class="m-btn-full primary" onclick="mSaveMember()" style="margin-top:12px">Save Member</button>
+      <button class="m-btn-full secondary" onclick="mCloseSheet('m-member-sheet')" style="margin-top:8px">Cancel</button>
+      <button class="m-btn-full danger" id="m-delete-member-btn" style="display:none;margin-top:8px" onclick="mDeleteMember()">Remove Member</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SHARED: Config, State, DB, Realtime
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL='https://cuacawbagxdgcktksfjr.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1YWNhd2JhZ3hkZ2NrdGtzZmpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjg2ODYsImV4cCI6MjA5NTg0NDY4Nn0.yPexI-Tb5XGhqsPSP2lGWAPlT-B3Ea9BP5tqiqnL0uo';
+const KEYS=['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B','Am','Em','Dm','Cm','Bm','Gm','Fm'];
+const MEMBER_COLORS=[{bg:'rgba(232,193,74,0.2)',tc:'#e8c14a'},{bg:'rgba(74,158,221,0.2)',tc:'#6ab8f0'},{bg:'rgba(76,175,130,0.2)',tc:'#6dd4a8'},{bg:'rgba(155,127,232,0.2)',tc:'#b89ff0'}];
+const IS_MOBILE=()=>window.innerWidth<=768;
+
+let sb=null;
+let shared={songs:[],gigs:[],members:[],loaded:false};
+let dState={view:'songs',songTab:'all',sortBy:'order',filterKey:'',filterSinger:'',searchQ:'',chordIdx:0,chordMode:'text',editSongId:null,editGigId:null,editMemberId:null,selectedStatus:'setlist'};
+let mState={view:'songs',songTab:'all',searchQ:'',chordIdx:0,chordMode:'text',editSongId:null,editGigId:null,editMemberId:null,selectedStatus:'setlist'};
+let dPendingImg='',dPendingPdf='',mPendingImg='',mPendingPdf='';
+
+function q(id){return document.getElementById(id)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function hasChart(s){return(s.chart&&s.chart.trim())||(s.chartImg&&s.chartImg.trim())||(s.chartPdf&&s.chartPdf.trim())}
+
+// ── TOAST ──────────────────────────────────────────────────────
+let toastT;
+function showToast(msg,type='info'){
+  const isMob=IS_MOBILE();
+  const el=q(isMob?'m-toast':'d-toast');if(!el)return;
+  const color=type==='success'?'var(--green)':type==='error'?'var(--red)':'var(--accent)';
+  el.innerHTML='<span style="color:'+color+'">'+(type==='success'?'✓':type==='error'?'✕':'↻')+'</span> '+esc(msg);
+  el.classList.add('show');clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── SYNC STATUS ────────────────────────────────────────────────
+function setSyncStatus(s){
+  ['d-sync-dot','m-sync-dot'].forEach(id=>{const el=q(id);if(el)el.className=(id.startsWith('d')?'d-sync-dot':'m-sync-dot')+' '+s;});
+  const label=s==='live'?'Live':s==='syncing'?'Saving...':s==='error'?'Offline':'Connecting...';
+  ['d-sync-label','m-sync-label'].forEach(id=>{const el=q(id);if(el)el.textContent=label;});
+}
+
+// ── DB HELPERS ─────────────────────────────────────────────────
+function dbToSong(r){return{id:r.id,title:r.title||'',artist:r.artist||'',key:r.key||'G',singer:r.singer||'',bpm:r.bpm||0,status:r.status||'setlist',order:r.sort_order||0,chart:r.chart||'',chartImg:r.chart_img||'',chartPdf:r.chart_pdf||'',requestedBy:r.requested_by||'',requestNote:r.request_note||''};}
+function songToDb(s){return{id:String(s.id),title:s.title,artist:s.artist||'',key:s.key||'G',singer:s.singer||'',bpm:s.bpm||0,status:s.status||'setlist',sort_order:s.order||0,chart:s.chart||'',chart_img:s.chartImg||'',chart_pdf:s.chartPdf||'',requested_by:s.requestedBy||'',request_note:s.requestNote||''};}
+function dbToGig(r){return{id:r.id,venue:r.venue,city:r.city||'',date:r.date,time:r.time||'',notes:r.notes||''};}
+function gigToDb(g){return{id:String(g.id),venue:g.venue,city:g.city||'',date:g.date,time:g.time||'',notes:g.notes||''};}
+function dbToMember(r){return{id:r.id,name:r.name,role:r.role||'',order:r.sort_order||0};}
+function memberToDb(m){return{id:String(m.id),name:m.name,role:m.role||'',sort_order:m.order||0};}
+
+// ── SUPABASE INIT & LOAD ───────────────────────────────────────
+function initSb(){if(typeof supabase!=='undefined'){sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return true;}return false;}
+
+async function loadAll(){
+  let tries=0;while(!initSb()&&tries<30){await new Promise(r=>setTimeout(r,100));tries++;}
+  if(!sb){setSyncStatus('error');shared.loaded=true;showToast('Could not load database library','error');renderAll();return;}
+  try{
+    const[sr,gr,mr]=await Promise.all([sb.from('songs').select('*').order('sort_order'),sb.from('gigs').select('*').order('date'),sb.from('members').select('*').order('sort_order')]);
+    if(sr.error)throw sr.error;
+    shared.songs=sr.data.map(dbToSong);shared.gigs=gr.data.map(dbToGig);shared.members=mr.data.map(dbToMember);
+    if(!shared.members.length)await seedMembers();
+    shared.loaded=true;setSyncStatus('live');renderAll();subscribeRealtime();
+  }catch(e){setSyncStatus('error');shared.loaded=true;showToast('Could not connect to database','error');renderAll();}
+}
+
+async function seedMembers(){
+  const d=[{id:'m1',name:'Matt',role:'Guitar / Vocals',sort_order:1},{id:'m2',name:'Member 2',role:'Bass / Vocals',sort_order:2},{id:'m3',name:'Member 3',role:'Drums / Vocals',sort_order:3}];
+  await sb.from('members').upsert(d);shared.members=d.map(dbToMember);
+}
+
+function subscribeRealtime(){
+  sb.channel('bm-main')
+    .on('postgres_changes',{event:'*',schema:'public',table:'songs'},p=>handleRT('songs',p))
+    .on('postgres_changes',{event:'*',schema:'public',table:'gigs'},p=>handleRT('gigs',p))
+    .on('postgres_changes',{event:'*',schema:'public',table:'members'},p=>handleRT('members',p))
+    .subscribe(s=>{if(s==='SUBSCRIBED')setSyncStatus('live');else if(s==='CLOSED')setSyncStatus('error');});
+}
+
+function handleRT(table,{eventType:ev,new:n,old:o}){
+  if(table==='songs'){
+    if(ev==='INSERT'){if(!shared.songs.find(s=>String(s.id)===String(n.id))){shared.songs.push(dbToSong(n));showToast('"'+n.title+'" added','success');}}
+    else if(ev==='UPDATE'){const i=shared.songs.findIndex(s=>String(s.id)===String(n.id));if(i>=0)shared.songs[i]=dbToSong(n);}
+    else if(ev==='DELETE'){shared.songs=shared.songs.filter(s=>String(s.id)!==String(o.id));}
+  }else if(table==='gigs'){
+    if(ev==='INSERT'){if(!shared.gigs.find(g=>String(g.id)===String(n.id)))shared.gigs.push(dbToGig(n));}
+    else if(ev==='UPDATE'){const i=shared.gigs.findIndex(g=>String(g.id)===String(n.id));if(i>=0)shared.gigs[i]=dbToGig(n);}
+    else if(ev==='DELETE'){shared.gigs=shared.gigs.filter(g=>String(g.id)!==String(o.id));}
+  }else if(table==='members'){
+    if(ev==='INSERT'){if(!shared.members.find(m=>String(m.id)===String(n.id)))shared.members.push(dbToMember(n));}
+    else if(ev==='UPDATE'){const i=shared.members.findIndex(m=>String(m.id)===String(n.id));if(i>=0)shared.members[i]=dbToMember(n);}
+    else if(ev==='DELETE'){shared.members=shared.members.filter(m=>String(m.id)!==String(o.id));}
+  }
+  renderAll();
+}
+
+function renderAll(){if(IS_MOBILE())mRender();else dRender();}
+window.addEventListener('resize',renderAll);
+
+// ═══════════════════════════════════════════════════════════════
+// DESKTOP LOGIC
+// ═══════════════════════════════════════════════════════════════
+function dNavigate(v){dState.view=v;dRender();}
+
+function dRender(){
+  if(IS_MOBILE())return;
+  // Nav
+  const views=[{id:'songs',label:'Songs',icon:'🎵'},{id:'setlist',label:'Set List',icon:'📋'},{id:'chords',label:'Charts',icon:'📄'},{id:'schedule',label:'Schedule',icon:'📅'},{id:'members',label:'Band',icon:'👥'}];
+  const counts={songs:shared.songs.length,setlist:shared.songs.filter(s=>s.status==='setlist').length,chords:shared.songs.filter(s=>hasChart(s)).length,schedule:shared.gigs.length,members:shared.members.length};
+  q('d-nav').innerHTML=views.map(v=>'<button class="d-nav-btn '+(dState.view===v.id?'active':'')+'" onclick="dNavigate(\''+v.id+'\')">'+(v.icon)+' '+v.label+' <span class="badge">'+counts[v.id]+'</span></button>').join('');
+  if(!shared.loaded){q('d-app').innerHTML='<div class="d-empty"><p><span class="spin">⟳</span> Loading...</p></div>';return;}
+  if(dState.view==='songs')dRenderSongs();
+  else if(dState.view==='setlist')dRenderSetlist();
+  else if(dState.view==='chords')dRenderChords();
+  else if(dState.view==='schedule')dRenderSchedule();
+  else if(dState.view==='members')dRenderMembers();
+}
+
+function dGetFiltered(){
+  let s=[...shared.songs];
+  if(dState.songTab!=='all')s=s.filter(x=>x.status===dState.songTab);
+  if(dState.filterKey)s=s.filter(x=>x.key===dState.filterKey);
+  if(dState.filterSinger)s=s.filter(x=>x.singer===dState.filterSinger);
+  if(dState.searchQ){const qq=dState.searchQ.toLowerCase();s=s.filter(x=>(x.title+x.artist+x.singer+x.key).toLowerCase().includes(qq));}
+  if(dState.sortBy==='key')s.sort((a,b)=>(a.key||'').localeCompare(b.key||''));
+  else if(dState.sortBy==='title')s.sort((a,b)=>a.title.localeCompare(b.title));
+  else if(dState.sortBy==='singer')s.sort((a,b)=>(a.singer||'').localeCompare(b.singer||''));
+  else if(dState.sortBy==='bpm')s.sort((a,b)=>(b.bpm||0)-(a.bpm||0));
+  else s.sort((a,b)=>a.order-b.order);
+  return s;
+}
+
+function dSongCard(s,num,setlistNum){
+  const sc={setlist:'var(--green)',backup:'var(--blue)',requests:'var(--accent)'};
+  const pills=(s.key?'<span class="pill key">'+esc(s.key)+'</span>':'')+(s.singer?'<span class="pill singer">'+esc(s.singer)+'</span>':'')+(s.bpm?'<span class="pill bpm">'+s.bpm+' bpm</span>':'')+(hasChart(s)?'<span class="pill has-chart">♪</span>':'');
+  const numEl=setlistNum?'<span class="setlist-num">'+num+'</span>':'<span class="song-num">'+num+'</span>';
+  const dot=setlistNum?'':'<span style="width:6px;height:6px;border-radius:50%;background:'+(sc[s.status]||'var(--text3)')+';display:inline-block;flex-shrink:0"></span>';
+  const req=s.requestedBy?' · <span style="color:var(--accent);font-size:11px">Req. by '+esc(s.requestedBy)+'</span>'+(s.requestNote?' <span style="color:var(--text3);font-size:11px">— '+esc(s.requestNote)+'</span>':''):'';
+  return '<div class="d-song-card" draggable="true" ondragstart="dDragStart(event,\''+s.id+'\')" ondragover="dDragOver(event,\''+s.id+'\')" ondrop="dDrop(event,\''+s.id+'\','+setlistNum+')" ondragleave="dDragLeave(event)">'
+    +'<span class="drag-handle">⠿</span>'+numEl+dot
+    +'<div class="song-info"><div class="song-title">'+esc(s.title)+'</div><div class="song-artist">'+esc(s.artist||'')+req+'</div></div>'
+    +'<div class="song-meta">'+pills+'</div>'
+    +'<div style="display:flex;gap:4px"><button class="d-btn small" onclick="dOpenSongModal(\''+s.id+'\')">✎</button><button class="d-btn small danger" onclick="dQuickDelete(\''+s.id+'\')">✕</button></div>'
+    +'</div>';
+}
+
+function dRenderSongs(){
+  const tabs=[{id:'all',label:'All'},{id:'setlist',label:'Set List'},{id:'backup',label:'Backup'},{id:'requests',label:'Requests'}];
+  const singers=[...new Set(shared.songs.map(s=>s.singer).filter(Boolean))];
+  const keys=[...new Set(shared.songs.map(s=>s.key).filter(Boolean))].sort();
+  const filtered=dGetFiltered();
+  let songsHTML='';
+  if(dState.sortBy==='key'){
+    const groups={};filtered.forEach(s=>{const k=s.key||'?';if(!groups[k])groups[k]=[];groups[k].push(s);});
+    Object.keys(groups).sort().forEach(k=>{songsHTML+='<div class="d-key-group-header">♪ Key of '+k+'</div>';songsHTML+=groups[k].map((s,i)=>dSongCard(s,i+1,false)).join('');});
+  }else{songsHTML=filtered.length?filtered.map((s,i)=>dSongCard(s,i+1,false)).join(''):'<div class="d-empty"><p>No songs found.</p></div>';}
+  const tabHTML=tabs.map(t=>'<button class="d-status-tab '+(dState.songTab===t.id?'active-'+t.id:'')+'" onclick="dState.songTab=\''+t.id+'\';dRender()">'+(t.id==='all'?'All '+shared.songs.length:t.label+' '+shared.songs.filter(s=>s.status===t.id).length)+'</button>').join('');
+  q('d-app').innerHTML='<div class="section-head"><div><div class="section-title">SONGS</div><div class="section-sub">'+shared.songs.length+' total</div></div><button class="d-btn primary" onclick="dOpenSongModal()">+ Add Song</button></div>'
+    +'<div class="d-status-tabs">'+tabHTML+'</div>'
+    +'<div class="d-filters">'
+    +'<input class="d-inp" type="text" placeholder="Search..." value="'+esc(dState.searchQ)+'" oninput="dState.searchQ=this.value;dRender()" style="min-width:160px"/>'
+    +'<select class="d-inp" onchange="dState.filterKey=this.value;dRender()"><option value="">All keys</option>'+keys.map(k=>'<option value="'+esc(k)+'" '+(dState.filterKey===k?'selected':'')+'>'+esc(k)+'</option>').join('')+'</select>'
+    +'<select class="d-inp" onchange="dState.filterSinger=this.value;dRender()"><option value="">All singers</option>'+singers.map(s=>'<option value="'+esc(s)+'" '+(dState.filterSinger===s?'selected':'')+'>'+esc(s)+'</option>').join('')+'</select>'
+    +'<select class="d-inp" onchange="dState.sortBy=this.value;dRender()"><option value="order">Sort: Default</option><option value="key">Sort: Key</option><option value="title">Sort: A–Z</option><option value="singer">Sort: Singer</option><option value="bpm">Sort: BPM</option></select>'
+    +'</div>'
+    +'<div class="d-songs-list">'+songsHTML+'</div>';
+}
+
+function dRenderSetlist(){
+  const songs=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const backup=shared.songs.filter(s=>s.status==='backup').sort((a,b)=>a.order-b.order);
+  let html='<div class="section-head"><div><div class="section-title">SET LIST</div><div class="section-sub">'+songs.length+' songs · ~'+Math.round(songs.length*3.5)+' min</div></div>'
+    +'<div style="display:flex;gap:8px"><button class="d-btn" onclick="dExportSetlistPDF()">📄 Export PDF</button><button class="d-btn primary" onclick="dNavigate(\'chords\')">♪ View Charts</button></div></div>';
+  html+='<div class="d-songs-list">'+(songs.length?songs.map((s,i)=>dSongCard(s,i+1,true)).join(''):'<div class="d-empty"><p>No songs in set list yet.</p></div>')+'</div>';
+  if(backup.length){
+    html+='<div class="d-divider"></div><div style="font-family:var(--font-head);font-size:18px;letter-spacing:1px;color:var(--text2);margin-bottom:12px">BACKUP SONGS</div><div class="d-songs-list">'
+      +backup.map((s,i)=>'<div class="d-song-card" style="opacity:.65"><span class="song-num">'+(i+1)+'</span><div class="song-info"><div class="song-title">'+esc(s.title)+'</div><div class="song-artist">'+esc(s.artist||'')+'</div></div>'
+      +(s.key?'<span class="pill key">'+esc(s.key)+'</span>':'')+(s.singer?'<span class="pill singer">'+esc(s.singer)+'</span>':'')
+      +'<button class="d-btn small" onclick="dMoveSong(\''+s.id+'\',\'setlist\')">+ Set List</button></div>').join('')+'</div>';
+  }
+  q('d-app').innerHTML=html;
+}
+
+function dRenderChords(){
+  const sl=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const all=[...sl,...shared.songs.filter(s=>s.status!=='setlist')];
+  if(dState.chordIdx>=all.length)dState.chordIdx=0;
+  const cur=all[dState.chordIdx];
+  let content='';
+  if(!cur){content='<div class="d-chord-empty"><p>Add songs to see chord charts.</p></div>';}
+  else if(dState.chordMode==='image'&&cur.chartImg){content='<div class="d-chord-file"><img src="'+cur.chartImg+'" alt="Chart"/></div>';}
+  else if(dState.chordMode==='pdf'&&cur.chartPdf){content='<div class="d-chord-file"><iframe src="'+cur.chartPdf+'"></iframe></div>';}
+  else if(dState.chordMode==='text'&&cur.chart&&cur.chart.trim()){content='<div class="d-chord-content">'+esc(cur.chart)+'</div>';}
+  else{content='<div class="d-chord-empty"><p style="font-weight:600;font-size:16px">'+esc(cur.title)+'</p><p>No '+dState.chordMode+' chart added.</p><button class="d-btn primary" onclick="dOpenSongModal(\''+cur.id+'\')">+ Add Chart</button></div>';}
+  const dots=all.map((s,i)=>'<div class="d-chord-dot '+(i===dState.chordIdx?'active':'')+(hasChart(s)?' has-chart':'')+'" onclick="dState.chordIdx='+i+';dRenderChords()" title="'+esc(s.title)+'"></div>').join('');
+  const modes=['text','image','pdf'].map(m=>'<button class="d-chart-mode-tab '+(dState.chordMode===m?'active':'')+'" onclick="dState.chordMode=\''+m+'\';dRenderChords()">'+m.charAt(0).toUpperCase()+m.slice(1)+'</button>').join('');
+  q('d-app').innerHTML='<div class="section-head"><div><div class="section-title">CHORD CHARTS</div><div class="section-sub">In set list order</div></div>'
+    +'<div style="display:flex;gap:8px">'+(cur?'<button class="d-btn" onclick="dOpenSongModal(\''+cur.id+'\')">✎ Edit</button>':'')
+    +(cur&&hasChart(cur)?'<button class="d-btn" onclick="dExportSinglePDF(\''+cur.id+'\')">📄 This Chart</button>':'')
+    +'<button class="d-btn primary" onclick="dExportAllPDF()">📄 All Charts</button></div></div>'
+    +'<div class="d-chord-viewer">'
+    +'<div class="d-chord-nav">'
+    +'<button class="d-btn icon-only" onclick="dPrevChord()" '+(dState.chordIdx===0?'disabled':'')+'>◀</button>'
+    +(cur?'<div style="flex:1"><div style="font-weight:500;font-size:14px">'+esc(cur.title)+'</div><div style="font-size:11px;color:var(--text2)">'+esc(cur.artist||'')+' · Key: '+esc(cur.key||'?')+' · '+esc(cur.singer||'?')+'</div></div>':'<div style="flex:1;color:var(--text3)">No songs</div>')
+    +'<div class="d-chart-mode-tabs">'+modes+'</div>'
+    +'<div class="d-chord-progress">'+dots+'</div>'
+    +'<button class="d-btn icon-only" onclick="dNextChord('+all.length+')" '+(dState.chordIdx>=all.length-1?'disabled':'')+'>▶</button>'
+    +'</div>'+content+'</div>'
+    +'<p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Filled dots = has chart</p>';
+}
+function dPrevChord(){if(dState.chordIdx>0){dState.chordIdx--;dRenderChords();}}
+function dNextChord(len){if(dState.chordIdx<len-1){dState.chordIdx++;dRenderChords();}}
+
+function dRenderSchedule(){
+  const today=new Date(new Date().toDateString());
+  const upcoming=shared.gigs.filter(g=>new Date(g.date+'T12:00:00')>=today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const past=shared.gigs.filter(g=>new Date(g.date+'T12:00:00')<today).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  function gigCard(g,isPast){
+    const d=new Date(g.date+'T12:00:00');
+    const ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    return '<div class="d-gig-card" style="'+(isPast?'opacity:.5':'')+'">'
+      +'<div class="gig-date-txt">'+ds+'</div><div class="gig-venue">'+esc(g.venue)+'</div>'
+      +'<div class="gig-detail">'+(g.time?esc(g.time)+' · ':'')+esc(g.city||'')+(g.notes?'<br><span style="color:var(--text3)">'+esc(g.notes)+'</span>':'')+'</div>'
+      +'<div class="gig-footer"><span style="font-size:11px;color:'+(isPast?'var(--text3)':'var(--green)')+';font-family:var(--font-mono)">'+(isPast?'DONE':'UPCOMING')+'</span>'
+      +'<div style="display:flex;gap:4px"><button class="d-btn small" onclick="dOpenGigModal(\''+g.id+'\')">✎</button><button class="d-btn small danger" onclick="dQuickDeleteGig(\''+g.id+'\')">✕</button></div></div></div>';
+  }
+  let html='<div class="section-head"><div><div class="section-title">SCHEDULE</div><div class="section-sub">'+upcoming.length+' upcoming</div></div>'
+    +'<div style="display:flex;gap:8px"><button class="d-btn" onclick="dExportSchedulePDF()">📄 Export PDF</button><button class="d-btn primary" onclick="dOpenGigModal()">+ Add Gig</button></div></div>';
+  html+=(upcoming.length?'<div style="font-size:11px;color:var(--accent);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">UPCOMING</div><div class="d-gigs-grid">'+upcoming.map(g=>gigCard(g,false)).join('')+'</div>':'<div class="d-empty"><p>No upcoming gigs yet.</p></div>');
+  if(past.length)html+='<div class="d-divider"></div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">PAST SHOWS</div><div class="d-gigs-grid">'+past.map(g=>gigCard(g,true)).join('')+'</div>';
+  q('d-app').innerHTML=html;
+}
+
+function dRenderMembers(){
+  let html='<div class="section-head"><div><div class="section-title">BAND</div><div class="section-sub">'+shared.members.length+' members</div></div><button class="d-btn primary" onclick="dOpenMemberModal()">+ Add Member</button></div>'
+    +'<div class="d-member-grid">';
+  shared.members.forEach((m,mi)=>{
+    const c=MEMBER_COLORS[mi%MEMBER_COLORS.length];
+    const initials=m.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const leads=shared.songs.filter(s=>s.singer===m.name&&s.status==='setlist').length;
+    const total=shared.songs.filter(s=>s.singer===m.name).length;
+    const preview=shared.songs.filter(s=>s.singer===m.name&&s.status==='setlist').slice(0,3).map(s=>'<span style="background:var(--bg3);border-radius:4px;padding:2px 6px;margin:2px;display:inline-block;font-size:11px;color:var(--text2)">'+esc(s.title)+'</span>').join('');
+    html+='<div class="d-member-card"><div class="d-member-header"><div class="d-member-avatar" style="background:'+c.bg+';color:'+c.tc+'">'+initials+'</div>'
+      +'<div><div style="font-weight:500;font-size:15px">'+esc(m.name)+'</div><div style="font-size:12px;color:var(--text2)">'+esc(m.role||'Band Member')+'</div></div></div>'
+      +'<div style="display:flex;gap:8px"><div class="d-stat-pill">Leads: <b style="color:var(--text)">'+leads+'</b></div><div class="d-stat-pill">Total: <b style="color:var(--text)">'+total+'</b></div></div>'
+      +'<div style="font-size:12px;color:var(--text3)">'+preview+'</div>'
+      +'<div style="display:flex;gap:6px"><button class="d-btn small" style="flex:1" onclick="dOpenMemberModal(\''+m.id+'\')">✎ Edit</button>'
+      +(shared.members.length>1?'<button class="d-btn small danger" onclick="dQuickDeleteMember(\''+m.id+'\')">✕</button>':'')+'</div></div>';
+  });
+  html+='</div>';
+  q('d-app').innerHTML=html;
+}
+
+// Desktop modal helpers
+function dOpenModal(id){q(id).classList.add('open');}
+function dCloseModal(id){q(id).classList.remove('open');}
+
+function dSelectStatus(s){
+  dState.selectedStatus=s;
+  ['setlist','backup','requests'].forEach(x=>{const el=q('d-opt-'+x);el.className='d-status-opt'+(x===s?' active-'+x:'');});
+  q('d-req-fields').className=s==='requests'?'d-form-group':'hidden';
+}
+
+function dOpenSongModal(id){
+  dState.editSongId=id||null;
+  const s=id?shared.songs.find(x=>String(x.id)===String(id)):null;
+  const v=s||{title:'',artist:'',key:'G',singer:shared.members[0]?.name||'',bpm:'',status:'setlist',chart:'',chartImg:'',chartPdf:'',requestedBy:'',requestNote:''};
+  q('d-song-modal-title').textContent=s?'EDIT SONG':'ADD SONG';
+  q('d-f-title').value=v.title;q('d-f-artist').value=v.artist;q('d-f-bpm').value=v.bpm||'';q('d-f-chart').value=v.chart||'';q('d-f-requestNote').value=v.requestNote||'';
+  q('d-f-key').innerHTML=KEYS.map(k=>'<option value="'+k+'" '+(v.key===k?'selected':'')+'>'+k+'</option>').join('');
+  q('d-f-singer').innerHTML=shared.members.map(m=>'<option value="'+esc(m.name)+'" '+(v.singer===m.name?'selected':'')+'>'+esc(m.name)+'</option>').join('')+'<option value="All" '+(v.singer==='All'?'selected':'')+'>All (harmonies)</option>';
+  q('d-f-requestedBy').innerHTML='<option value="">— select —</option>'+shared.members.map(m=>'<option value="'+esc(m.name)+'" '+(v.requestedBy===m.name?'selected':'')+'>'+esc(m.name)+'</option>').join('');
+  dSelectStatus(v.status||'setlist');
+  dPendingImg='';
+  q('d-img-zone').classList.toggle('has-file',!!(v.chartImg));
+  q('d-img-zone-inner').innerHTML=v.chartImg?'<img src="'+v.chartImg+'" style="max-width:100%;max-height:100px;border-radius:6px"/><div style="font-size:11px;margin-top:4px;color:var(--text3)">Click to replace</div>':'📷 Click to upload image<br><small style="color:var(--text3)">JPG or PNG</small>';
+  q('d-clear-img-btn').style.display=v.chartImg?'block':'none';
+  dPendingPdf='';
+  q('d-pdf-zone').classList.toggle('has-file',!!(v.chartPdf));
+  q('d-pdf-zone-inner').innerHTML=v.chartPdf?'📄 PDF uploaded — click to replace':'📄 Click to upload PDF<br><small style="color:var(--text3)">PDF chart or lead sheet</small>';
+  q('d-clear-pdf-btn').style.display=v.chartPdf?'block':'none';
+  q('d-delete-song-btn').style.display=s?'inline-flex':'none';
+  dOpenModal('d-song-modal');
+}
+
+function dHandleImg(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{dPendingImg=ev.target.result;q('d-img-zone').classList.add('has-file');q('d-img-zone-inner').innerHTML='<img src="'+dPendingImg+'" style="max-width:100%;max-height:100px;border-radius:6px"/><div style="font-size:11px;margin-top:4px;color:var(--text3)">Click to replace</div>';q('d-clear-img-btn').style.display='block';};r.readAsDataURL(file);}
+function dClearImg(){dPendingImg='__CLEAR__';q('d-img-zone').classList.remove('has-file');q('d-img-zone-inner').innerHTML='📷 Click to upload image<br><small style="color:var(--text3)">JPG or PNG</small>';q('d-clear-img-btn').style.display='none';}
+function dHandlePdf(e){const file=e.target.files[0];if(!file)return;if(file.size>5*1024*1024){alert('PDF must be under 5MB.');return;}const r=new FileReader();r.onload=ev=>{dPendingPdf=ev.target.result;q('d-pdf-zone').classList.add('has-file');q('d-pdf-zone-inner').innerHTML='📄 '+esc(file.name)+' — click to replace';q('d-clear-pdf-btn').style.display='block';};r.readAsDataURL(file);}
+function dClearPdf(){dPendingPdf='__CLEAR__';q('d-pdf-zone').classList.remove('has-file');q('d-pdf-zone-inner').innerHTML='📄 Click to upload PDF<br><small style="color:var(--text3)">PDF chart or lead sheet</small>';q('d-clear-pdf-btn').style.display='none';}
+
+async function dSaveSong(){
+  const title=q('d-f-title').value.trim();if(!title){alert('Song title is required');return;}
+  const id=dState.editSongId;const existing=id?shared.songs.find(s=>String(s.id)===String(id)):null;
+  let chartImg=existing?.chartImg||'';if(dPendingImg==='__CLEAR__')chartImg='';else if(dPendingImg)chartImg=dPendingImg;
+  let chartPdf=existing?.chartPdf||'';if(dPendingPdf==='__CLEAR__')chartPdf='';else if(dPendingPdf)chartPdf=dPendingPdf;
+  const song={id:id||String(Date.now()),title,artist:q('d-f-artist').value.trim(),key:q('d-f-key').value,singer:q('d-f-singer').value,bpm:parseInt(q('d-f-bpm').value)||0,status:dState.selectedStatus,chart:q('d-f-chart').value,chartImg,chartPdf,requestedBy:q('d-f-requestedBy').value||'',requestNote:q('d-f-requestNote').value||'',order:existing?existing.order:shared.songs.length+1};
+  setSyncStatus('syncing');
+  const{error}=await sb.from('songs').upsert(songToDb(song));
+  if(error){showToast('Error saving song','error');setSyncStatus('error');}
+  else{if(existing){const i=shared.songs.findIndex(s=>String(s.id)===String(id));shared.songs[i]=song;}else shared.songs.push(song);setSyncStatus('live');showToast(existing?'Song updated!':'Song added!','success');}
+  dCloseModal('d-song-modal');dRender();
+}
+
+async function dDeleteSongModal(){if(!confirm('Delete this song?'))return;const id=dState.editSongId;const{error}=await sb.from('songs').delete().eq('id',String(id));if(!error){shared.songs=shared.songs.filter(s=>String(s.id)!==String(id));showToast('Song deleted','success');}dCloseModal('d-song-modal');dRender();}
+async function dQuickDelete(id){if(!confirm('Delete this song?'))return;const{error}=await sb.from('songs').delete().eq('id',String(id));if(!error){shared.songs=shared.songs.filter(s=>String(s.id)!==String(id));showToast('Deleted','success');}dRender();}
+async function dMoveSong(id,status){const s=shared.songs.find(x=>String(x.id)===String(id));if(!s)return;s.status=status;await sb.from('songs').update({status}).eq('id',String(id));dRender();}
+
+function dOpenGigModal(id){
+  dState.editGigId=id||null;const g=id?shared.gigs.find(x=>String(x.id)===String(id)):null;
+  q('d-gig-modal-title').textContent=g?'EDIT GIG':'ADD GIG';
+  q('d-g-venue').value=g?.venue||'';q('d-g-city').value=g?.city||'';q('d-g-date').value=g?.date||'';q('d-g-time').value=g?.time||'';q('d-g-notes').value=g?.notes||'';
+  q('d-delete-gig-btn').style.display=g?'inline-flex':'none';dOpenModal('d-gig-modal');
+}
+async function dSaveGig(){
+  const venue=q('d-g-venue').value.trim(),date=q('d-g-date').value;if(!venue||!date){alert('Venue and date required');return;}
+  const id=dState.editGigId;const gig={id:id||('g'+Date.now()),venue,date,city:q('d-g-city').value.trim(),time:q('d-g-time').value,notes:q('d-g-notes').value.trim()};
+  setSyncStatus('syncing');const{error}=await sb.from('gigs').upsert(gigToDb(gig));
+  if(!error){const i=shared.gigs.findIndex(g=>String(g.id)===String(gig.id));if(i>=0)shared.gigs[i]=gig;else shared.gigs.push(gig);setSyncStatus('live');showToast('Gig saved!','success');}
+  dCloseModal('d-gig-modal');dRender();
+}
+async function dDeleteGigModal(){if(!confirm('Delete this gig?'))return;const id=dState.editGigId;const{error}=await sb.from('gigs').delete().eq('id',String(id));if(!error){shared.gigs=shared.gigs.filter(g=>String(g.id)!==String(id));showToast('Gig deleted','success');}dCloseModal('d-gig-modal');dRender();}
+async function dQuickDeleteGig(id){if(!confirm('Delete this gig?'))return;const{error}=await sb.from('gigs').delete().eq('id',String(id));if(!error){shared.gigs=shared.gigs.filter(g=>String(g.id)!==String(id));showToast('Deleted','success');}dRender();}
+
+function dOpenMemberModal(id){
+  dState.editMemberId=id||null;const m=id?shared.members.find(x=>String(x.id)===String(id)):null;
+  q('d-member-modal-title').textContent=m?'EDIT MEMBER':'ADD MEMBER';
+  q('d-m-name').value=m?.name||'';q('d-m-role').value=m?.role||'';
+  q('d-delete-member-btn').style.display=(m&&shared.members.length>1)?'inline-flex':'none';dOpenModal('d-member-modal');
+}
+async function dSaveMember(){
+  const name=q('d-m-name').value.trim();if(!name){alert('Name required');return;}
+  const id=dState.editMemberId;const member={id:id||('m'+Date.now()),name,role:q('d-m-role').value.trim(),order:shared.members.length+1};
+  const{error}=await sb.from('members').upsert(memberToDb(member));
+  if(!error){const i=shared.members.findIndex(m=>String(m.id)===String(member.id));if(i>=0)shared.members[i]=member;else shared.members.push(member);showToast('Member saved!','success');}
+  dCloseModal('d-member-modal');dRender();
+}
+async function dDeleteMemberModal(){if(!confirm('Remove this member?'))return;const id=dState.editMemberId;const{error}=await sb.from('members').delete().eq('id',String(id));if(!error){shared.members=shared.members.filter(m=>String(m.id)!==String(id));showToast('Member removed','success');}dCloseModal('d-member-modal');dRender();}
+async function dQuickDeleteMember(id){if(!confirm('Remove this member?'))return;const{error}=await sb.from('members').delete().eq('id',String(id));if(!error){shared.members=shared.members.filter(m=>String(m.id)!==String(id));showToast('Removed','success');}dRender();}
+
+// Desktop drag & drop
+let dDragSrcId=null;
+function dDragStart(e,id){dDragSrcId=id;e.dataTransfer.effectAllowed='move';}
+function dDragOver(e,id){e.preventDefault();e.currentTarget.classList.add('d-drag-over');}
+function dDragLeave(e){e.currentTarget.classList.remove('d-drag-over');}
+function dDrop(e,id,isSetlist){
+  e.currentTarget.classList.remove('d-drag-over');
+  if(String(dDragSrcId)===String(id))return;
+  if(isSetlist){
+    const sl=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+    const si=sl.findIndex(s=>String(s.id)===String(dDragSrcId));const ti=sl.findIndex(s=>String(s.id)===String(id));
+    if(si<0||ti<0)return;const[moved]=sl.splice(si,1);sl.splice(ti,0,moved);
+    sl.forEach((s,i)=>{s.order=i+1;if(sb)sb.from('songs').update({sort_order:i+1}).eq('id',String(s.id));});
+  }else{
+    const src=shared.songs.find(s=>String(s.id)===String(dDragSrcId));const tgt=shared.songs.find(s=>String(s.id)===String(id));
+    if(!src||!tgt)return;[src.order,tgt.order]=[tgt.order,src.order];
+    if(sb){sb.from('songs').update({sort_order:src.order}).eq('id',String(src.id));sb.from('songs').update({sort_order:tgt.order}).eq('id',String(tgt.id));}
+  }
+  dRender();
+}
+
+// Desktop PDF exports
+function dGetPdf(){if(typeof window.jspdf==='undefined'){showToast('PDF library loading, try again','error');return null;}return new window.jspdf.jsPDF();}
+function dExportSetlistPDF(){
+  const doc=dGetPdf();if(!doc)return;
+  const songs=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text('SET LIST',20,24);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);doc.text(new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),20,32);
+  doc.setDrawColor(200,200,200);doc.line(20,36,190,36);doc.setTextColor(0,0,0);let y=46;
+  songs.forEach((s,i)=>{if(y>270){doc.addPage();y=20;}doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text((i+1)+'.  '+s.title,20,y);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(100,100,100);doc.text([s.artist,s.key?'Key: '+s.key:'',s.singer?'Singer: '+s.singer:'',s.bpm?s.bpm+' BPM':''].filter(Boolean).join('  ·  '),28,y+6);doc.setTextColor(0,0,0);y+=18;});
+  doc.save('setlist.pdf');showToast('PDF downloaded','success');
+}
+function dExportSinglePDF(id){
+  const doc=dGetPdf();if(!doc)return;const s=shared.songs.find(x=>String(x.id)===String(id));if(!s)return;
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(s.title,20,22);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(120,120,120);doc.text([s.artist,'Key: '+(s.key||'?'),'Singer: '+(s.singer||'?'),s.bpm?s.bpm+' BPM':''].filter(Boolean).join('  ·  '),20,30);doc.setDrawColor(200,200,200);doc.line(20,34,190,34);doc.setTextColor(0,0,0);
+  if(s.chart&&s.chart.trim()){doc.setFont('courier','normal');doc.setFontSize(11);const lines=doc.splitTextToSize(s.chart,170);let y=44;lines.forEach(l=>{if(y>280){doc.addPage();y=20;}doc.text(l,20,y);y+=6;});}
+  if(s.chartImg){doc.addPage();doc.setFontSize(14);doc.text(s.title+' — Chart Image',20,20);try{doc.addImage(s.chartImg,'JPEG',20,30,170,200);}catch(e){}}
+  doc.save(s.title.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'_chart.pdf');showToast('Downloaded','success');
+}
+function dExportAllPDF(){
+  const doc=dGetPdf();if(!doc)return;const songs=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);if(!songs.length){showToast('No songs in set list','error');return;}
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text('CHORD CHARTS',20,24);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);doc.text('Set List · '+songs.length+' songs',20,32);doc.setDrawColor(200,200,200);doc.line(20,36,190,36);let y=46;doc.setTextColor(0,0,0);
+  songs.forEach((s,i)=>{doc.setFontSize(11);doc.setTextColor(100,100,100);doc.text((i+1)+'.  '+s.title+'  ('+(s.key||'?')+' · '+(s.singer||'?')+')',20,y);y+=8;});
+  songs.forEach((s,i)=>{doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(0,0,0);doc.text((i+1)+'. '+s.title,20,22);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(120,120,120);doc.text([s.artist,'Key: '+(s.key||'?'),'Singer: '+(s.singer||'?'),s.bpm?s.bpm+' BPM':''].filter(Boolean).join('  ·  '),20,30);doc.setDrawColor(200,200,200);doc.line(20,34,190,34);doc.setTextColor(0,0,0);
+    if(s.chart&&s.chart.trim()){doc.setFont('courier','normal');doc.setFontSize(10);const lines=doc.splitTextToSize(s.chart,170);let cy=44;lines.forEach(l=>{if(cy>280){doc.addPage();cy=20;}doc.text(l,20,cy);cy+=5.5;});}else if(!s.chartImg){doc.setFont('helvetica','italic');doc.setFontSize(12);doc.setTextColor(160,160,160);doc.text('No chart added yet.',20,50);}
+    if(s.chartImg){doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(0,0,0);doc.text(s.title+' — Image',20,20);try{doc.addImage(s.chartImg,'JPEG',20,30,170,210);}catch(e){}}
+  });
+  doc.save('all_charts.pdf');showToast('All charts downloaded','success');
+}
+function dExportSchedulePDF(){
+  const doc=dGetPdf();if(!doc)return;const today=new Date(new Date().toDateString());
+  const upcoming=shared.gigs.filter(g=>new Date(g.date+'T12:00:00')>=today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text('GIG SCHEDULE',20,24);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);doc.text(upcoming.length+' upcoming · As of '+new Date().toLocaleDateString(),20,32);doc.setDrawColor(200,200,200);doc.line(20,36,190,36);doc.setTextColor(0,0,0);let y=46;
+  upcoming.forEach(g=>{if(y>270){doc.addPage();y=20;}const d=new Date(g.date+'T12:00:00');doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text(g.venue,20,y);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(100,100,100);doc.text([d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),g.time||'',g.city||''].filter(Boolean).join('  ·  '),20,y+6);if(g.notes){doc.setTextColor(140,140,140);doc.text(g.notes,20,y+12);y+=6;}doc.setTextColor(0,0,0);y+=22;});
+  doc.save('schedule.pdf');showToast('Downloaded','success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE LOGIC
+// ═══════════════════════════════════════════════════════════════
+function mNavigate(v){
+  mState.view=v;
+  document.querySelectorAll('.m-nav-item').forEach(el=>el.classList.remove('active'));
+  const el=q('m-nav-'+v);if(el)el.classList.add('active');
+  mRender();
+}
+
+function mHeaderAction(){
+  if(mState.view==='songs'||mState.view==='setlist')mOpenSongSheet();
+  else if(mState.view==='schedule')mOpenGigSheet();
+  else if(mState.view==='members')mOpenMemberSheet();
+  else if(mState.view==='chords'){const all=[...shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order),...shared.songs.filter(s=>s.status!=='setlist')];const cur=all[mState.chordIdx];if(cur)mOpenSongSheet(cur.id);}
+}
+
+function mRender(){
+  if(!IS_MOBILE())return;
+  if(!shared.loaded){q('m-page').innerHTML='<div class="m-empty"><div class="spin" style="font-size:32px">⟳</div><div style="margin-top:12px;font-size:15px">Loading...</div></div>';q('m-header-btn').style.display='none';return;}
+  const titles={songs:'Songs',setlist:'Set List',chords:'Chord Charts',schedule:'Schedule',members:'Band'};
+  q('m-header-title').textContent='🎸 '+titles[mState.view];
+  q('m-header-btn').style.display='flex';
+  q('m-header-btn').textContent=mState.view==='chords'?'✎ Edit':'+ Add';
+  if(mState.view==='songs')mRenderSongs();
+  else if(mState.view==='setlist')mRenderSetlist();
+  else if(mState.view==='chords')mRenderChords();
+  else if(mState.view==='schedule')mRenderSchedule();
+  else if(mState.view==='members')mRenderMembers();
+}
+
+function mRenderSongs(){
+  q('m-page').style.cssText='';
+  const tabs=[{id:'all',label:'All'},{id:'setlist',label:'Set List'},{id:'backup',label:'Backup'},{id:'requests',label:'Requests'}];
+  let songs=[...shared.songs];
+  if(mState.songTab!=='all')songs=songs.filter(s=>s.status===mState.songTab);
+  if(mState.searchQ){const qq=mState.searchQ.toLowerCase();songs=songs.filter(s=>(s.title+s.artist+s.singer+s.key).toLowerCase().includes(qq));}
+  songs.sort((a,b)=>a.order-b.order);
+  const sc={setlist:'var(--green)',backup:'var(--blue)',requests:'var(--accent)'};
+  const tabHTML=tabs.map(t=>{const count=t.id==='all'?shared.songs.length:shared.songs.filter(s=>s.status===t.id).length;return'<button class="m-filter-chip '+(mState.songTab===t.id?'active-'+t.id:'')+'" onclick="mState.songTab=\''+t.id+'\';mRender()">'+t.label+' '+count+'</button>';}).join('');
+  const songsHTML=songs.length?songs.map(s=>{
+    const chips=(s.key?'<span class="m-chip key">'+esc(s.key)+'</span>':'')+(s.singer?'<span class="m-chip singer">'+esc(s.singer)+'</span>':'')+(s.bpm?'<span class="m-chip bpm">'+s.bpm+'</span>':'')+(hasChart(s)?'<span class="m-chip chart">♪</span>':'');
+    return'<div class="m-song-row" onclick="mOpenSongSheet(\''+s.id+'\')">'
+      +'<div class="m-status-dot" style="background:'+(sc[s.status]||'var(--text3)')+'"></div>'
+      +'<div class="m-song-row-left"><div class="m-song-title">'+esc(s.title)+'</div>'+(s.artist?'<div class="m-song-artist">'+esc(s.artist)+'</div>':'')+(chips?'<div class="m-song-meta">'+chips+'</div>':'')
+      +(s.requestedBy?'<div style="background:rgba(232,193,74,0.08);border:1px solid rgba(232,193,74,0.15);border-radius:8px;padding:5px 10px;margin-top:5px;font-size:12px;color:var(--text2)">⭐ Req. by '+esc(s.requestedBy)+(s.requestNote?' — '+esc(s.requestNote):'')+' </div>':'')
+      +'</div><div style="color:var(--text3);font-size:18px">›</div></div>';
+  }).join(''):'<div class="m-empty"><div style="font-size:40px">🎵</div><div style="margin-top:8px;font-size:15px">No songs yet. Tap + Add!</div></div>';
+  q('m-page').innerHTML='<div class="m-search-bar"><input class="m-search-input" placeholder="🔍 Search songs..." value="'+esc(mState.searchQ)+'" oninput="mState.searchQ=this.value;mRender()" autocomplete="off"/></div>'+'<div class="m-filter-row">'+tabHTML+'</div>'+'<div class="m-section-pad">'+songsHTML+'</div>';
+}
+
+function mRenderSetlist(){
+  q('m-page').style.cssText='';
+  const songs=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const backup=shared.songs.filter(s=>s.status==='backup').sort((a,b)=>a.order-b.order);
+  let html='<div class="m-section-pad"><div class="m-section-label">'+songs.length+' Songs · ~'+Math.round(songs.length*3.5)+' min</div>';
+  html+=songs.length?songs.map((s,i)=>'<div class="m-song-row" onclick="mOpenSongSheet(\''+s.id+'\')">'+'<span class="m-setlist-num">'+(i+1)+'</span><div class="m-song-row-left"><div class="m-song-title">'+esc(s.title)+'</div>'+(s.artist?'<div class="m-song-artist">'+esc(s.artist)+'</div>':'')+(s.key||s.singer?'<div class="m-song-meta">'+(s.key?'<span class="m-chip key">'+esc(s.key)+'</span>':'')+(s.singer?'<span class="m-chip singer">'+esc(s.singer)+'</span>':'')+'</div>':'')+'</div><div style="color:var(--text3);font-size:18px">›</div></div>').join(''):'<div class="m-empty"><div style="font-size:36px">📋</div><div style="margin-top:8px;font-size:15px">No songs in set list yet.</div></div>';
+  if(backup.length){html+='<div class="m-divider"></div><div class="m-section-label">Backup Songs</div>'+backup.map((s,i)=>'<div class="m-song-row" onclick="mOpenSongSheet(\''+s.id+'\')" style="opacity:.65"><span style="font-family:var(--font-mono);font-size:15px;color:var(--text3);width:28px;text-align:center">'+(i+1)+'</span><div class="m-song-row-left"><div class="m-song-title">'+esc(s.title)+'</div></div><div style="color:var(--text3);font-size:18px">›</div></div>').join('');}
+  html+='</div>';q('m-page').innerHTML=html;
+}
+
+function mRenderChords(){
+  const sl=shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order);
+  const all=[...sl,...shared.songs.filter(s=>s.status!=='setlist')];
+  if(mState.chordIdx>=all.length)mState.chordIdx=0;
+  const cur=all[mState.chordIdx];
+  if(!all.length){q('m-page').style.cssText='';q('m-page').innerHTML='<div class="m-empty" style="padding-top:60px"><div style="font-size:40px">📄</div><div style="margin-top:8px;font-size:15px">Add songs to see chord charts.</div></div>';return;}
+  q('m-page').style.cssText='overflow:hidden;display:flex;flex-direction:column;padding-bottom:0';
+  let content='';
+  if(cur){
+    if(mState.chordMode==='image'&&cur.chartImg)content='<div class="m-chord-file"><img src="'+cur.chartImg+'" alt="Chart"/></div>';
+    else if(mState.chordMode==='pdf'&&cur.chartPdf)content='<div class="m-chord-file"><iframe src="'+cur.chartPdf+'"></iframe></div>';
+    else if(mState.chordMode==='text'&&cur.chart&&cur.chart.trim())content='<div class="m-chord-text">'+esc(cur.chart)+'</div>';
+    else content='<div class="m-chord-empty"><div style="font-size:36px">📄</div><div style="font-weight:700;font-size:16px;margin-top:8px">'+esc(cur.title)+'</div><div style="margin-top:4px">No '+mState.chordMode+' chart yet.</div><button class="m-btn-sm" style="margin-top:12px" onclick="mOpenSongSheet(\''+cur.id+'\')">+ Add Chart</button></div>';
+  }
+  const dots=all.map((s,i)=>'<div class="m-chord-dot '+(i===mState.chordIdx?'active':'')+(hasChart(s)?' has-chart':'')+'" onclick="mState.chordIdx='+i+';mRenderChords()" title="'+esc(s.title)+'"></div>').join('');
+  const modes=['text','image','pdf'].map(m=>'<button class="m-chord-mode-btn '+(mState.chordMode===m?'active':'')+'" onclick="mState.chordMode=\''+m+'\';mRenderChords()">'+m.charAt(0).toUpperCase()+m.slice(1)+'</button>').join('');
+  q('m-page').innerHTML='<div class="m-chord-viewer">'
+    +'<div class="m-chord-song-info"><div class="m-chord-song-title">'+(cur?esc(cur.title):'')+'</div><div class="m-chord-song-meta">'+(cur?esc(cur.artist||'')+' · Key: '+esc(cur.key||'?')+' · '+esc(cur.singer||'?'):'')+'</div></div>'
+    +'<div class="m-chord-mode-bar">'+modes+'</div>'
+    +content
+    +'<div class="m-chord-nav-bar">'
+    +'<button class="m-chord-nav-btn" onclick="mPrevChord()" '+(mState.chordIdx===0?'disabled':'')+'>◀</button>'
+    +'<div style="text-align:center"><div class="m-chord-dots">'+dots+'</div><div style="font-family:var(--font-mono);font-size:13px;color:var(--text2);margin-top:5px">'+(mState.chordIdx+1)+' / '+all.length+'</div></div>'
+    +'<button class="m-chord-nav-btn" onclick="mNextChord('+all.length+')" '+(mState.chordIdx>=all.length-1?'disabled':'')+'>▶</button>'
+    +'</div></div>';
+}
+function mPrevChord(){if(mState.chordIdx>0){mState.chordIdx--;mRenderChords();}}
+function mNextChord(len){if(mState.chordIdx<len-1){mState.chordIdx++;mRenderChords();}}
+
+function mRenderSchedule(){
+  q('m-page').style.cssText='';
+  const today=new Date(new Date().toDateString());
+  const upcoming=shared.gigs.filter(g=>new Date(g.date+'T12:00:00')>=today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const past=shared.gigs.filter(g=>new Date(g.date+'T12:00:00')<today).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let html='<div class="m-section-pad">';
+  if(upcoming.length){
+    html+='<div class="m-section-label">Upcoming — '+upcoming.length+' show'+(upcoming.length!==1?'s':'')+'</div>';
+    html+=upcoming.map(g=>{const d=new Date(g.date+'T12:00:00');const ds=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});return'<div class="m-gig-card"><div class="m-gig-date">'+ds+'</div><div class="m-gig-venue">'+esc(g.venue)+'</div><div class="m-gig-meta">'+(g.time?esc(g.time)+' · ':'')+esc(g.city||'')+(g.notes?'<br>'+esc(g.notes):'')+'</div><div style="margin-top:10px"><button class="m-btn-sm" onclick="mOpenGigSheet(\''+g.id+'\')">✎ Edit</button></div></div>';}).join('');
+  }else{html+='<div class="m-empty"><div style="font-size:40px">📅</div><div style="margin-top:8px;font-size:15px">No upcoming gigs. Tap + Add!</div></div>';}
+  if(past.length){html+='<div class="m-divider"></div><div class="m-section-label">Past Shows</div>'+past.map(g=>{const d=new Date(g.date+'T12:00:00');const ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});return'<div class="m-gig-card" style="opacity:.5"><div class="m-gig-date">'+ds+' · DONE</div><div class="m-gig-venue">'+esc(g.venue)+'</div><div class="m-gig-meta">'+esc(g.city||'')+'</div><div style="margin-top:10px"><button class="m-btn-sm" onclick="mOpenGigSheet(\''+g.id+'\')">✎ Edit</button></div></div>';}).join('');}
+  html+='</div>';q('m-page').innerHTML=html;
+}
+
+function mRenderMembers(){
+  q('m-page').style.cssText='';
+  let html='<div class="m-section-pad">';
+  html+=shared.members.map((m,mi)=>{const c=MEMBER_COLORS[mi%MEMBER_COLORS.length];const initials=m.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);const leads=shared.songs.filter(s=>s.singer===m.name&&s.status==='setlist').length;const total=shared.songs.filter(s=>s.singer===m.name).length;return'<div class="m-member-card" onclick="mOpenMemberSheet(\''+m.id+'\')">'+'<div class="m-member-avatar" style="background:'+c.bg+';color:'+c.tc+'">'+initials+'</div>'+'<div style="flex:1;min-width:0"><div class="m-member-name">'+esc(m.name)+'</div><div class="m-member-role">'+esc(m.role||'Band Member')+'</div><div class="m-member-stats">'+leads+' set list · '+total+' total</div></div><div style="color:var(--text3);font-size:18px">›</div></div>';}).join('');
+  html+='</div>';q('m-page').innerHTML=html;
+}
+
+// Mobile sheets
+function mOpenSheet(id){q(id).classList.add('open');}
+function mCloseSheet(id){q(id).classList.remove('open');}
+
+function mSelectStatus(s){
+  mState.selectedStatus=s;
+  ['setlist','backup','requests'].forEach(x=>{const el=q('m-opt-'+x);el.className='m-status-opt'+(x===s?' active-'+x:'');});
+  q('m-req-fields').className=s==='requests'?'m-form-field':'hidden';
+}
+
+function mOpenSongSheet(id){
+  mState.editSongId=id||null;
+  const s=id?shared.songs.find(x=>String(x.id)===String(id)):null;
+  const v=s||{title:'',artist:'',key:'G',singer:shared.members[0]?.name||'',bpm:'',status:'setlist',chart:'',chartImg:'',chartPdf:'',requestedBy:'',requestNote:''};
+  q('m-song-sheet-title').textContent=s?'Edit Song':'Add Song';
+  q('m-f-title').value=v.title;q('m-f-artist').value=v.artist;q('m-f-bpm').value=v.bpm||'';q('m-f-chart').value=v.chart||'';q('m-f-requestNote').value=v.requestNote||'';
+  q('m-f-key').innerHTML=KEYS.map(k=>'<option value="'+k+'" '+(v.key===k?'selected':'')+'>'+k+'</option>').join('');
+  q('m-f-singer').innerHTML=shared.members.map(m=>'<option value="'+esc(m.name)+'" '+(v.singer===m.name?'selected':'')+'>'+esc(m.name)+'</option>').join('')+'<option value="All" '+(v.singer==='All'?'selected':'')+'>All (harmonies)</option>';
+  q('m-f-requestedBy').innerHTML='<option value="">— select —</option>'+shared.members.map(m=>'<option value="'+esc(m.name)+'" '+(v.requestedBy===m.name?'selected':'')+'>'+esc(m.name)+'</option>').join('');
+  mSelectStatus(v.status||'setlist');
+  mPendingImg='';
+  q('m-img-zone').classList.toggle('has-file',!!(v.chartImg));
+  q('m-img-zone-inner').innerHTML=v.chartImg?'<img src="'+v.chartImg+'" style="max-width:100%;max-height:80px;border-radius:6px"/><div style="font-size:12px;margin-top:4px;color:var(--text3)">Tap to replace</div>':'<div style="font-size:24px">📷</div><div style="font-size:14px;font-weight:500;margin-top:4px">Tap to upload image</div>';
+  q('m-clear-img-btn').style.display=v.chartImg?'flex':'none';
+  mPendingPdf='';
+  q('m-pdf-zone').classList.toggle('has-file',!!(v.chartPdf));
+  q('m-pdf-zone-inner').innerHTML=v.chartPdf?'<div style="font-size:24px">📄</div><div style="font-size:14px;font-weight:500;margin-top:4px">PDF uploaded — tap to replace</div>':'<div style="font-size:24px">📄</div><div style="font-size:14px;font-weight:500;margin-top:4px">Tap to upload PDF</div>';
+  q('m-clear-pdf-btn').style.display=v.chartPdf?'flex':'none';
+  q('m-delete-song-btn').style.display=s?'flex':'none';
+  mOpenSheet('m-song-sheet');
+}
+
+function mHandleImg(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{mPendingImg=ev.target.result;q('m-img-zone').classList.add('has-file');q('m-img-zone-inner').innerHTML='<img src="'+mPendingImg+'" style="max-width:100%;max-height:80px;border-radius:6px"/><div style="font-size:12px;margin-top:4px;color:var(--text3)">Tap to replace</div>';q('m-clear-img-btn').style.display='flex';};r.readAsDataURL(file);}
+function mClearImg(){mPendingImg='__CLEAR__';q('m-img-zone').classList.remove('has-file');q('m-img-zone-inner').innerHTML='<div style="font-size:24px">📷</div><div style="font-size:14px;font-weight:500;margin-top:4px">Tap to upload image</div>';q('m-clear-img-btn').style.display='none';}
+function mHandlePdf(e){const file=e.target.files[0];if(!file)return;if(file.size>5*1024*1024){alert('PDF must be under 5MB.');return;}const r=new FileReader();r.onload=ev=>{mPendingPdf=ev.target.result;q('m-pdf-zone').classList.add('has-file');q('m-pdf-zone-inner').innerHTML='<div style="font-size:24px">📄</div><div style="font-size:14px;font-weight:500;margin-top:4px">'+esc(file.name)+'</div>';q('m-clear-pdf-btn').style.display='flex';};r.readAsDataURL(file);}
+function mClearPdf(){mPendingPdf='__CLEAR__';q('m-pdf-zone').classList.remove('has-file');q('m-pdf-zone-inner').innerHTML='<div style="font-size:24px">📄</div><div style="font-size:14px;font-weight:500;margin-top:4px">Tap to upload PDF</div>';q('m-clear-pdf-btn').style.display='none';}
+
+async function mSaveSong(){
+  const title=q('m-f-title').value.trim();if(!title){alert('Song title is required');return;}
+  const id=mState.editSongId;const existing=id?shared.songs.find(s=>String(s.id)===String(id)):null;
+  let chartImg=existing?.chartImg||'';if(mPendingImg==='__CLEAR__')chartImg='';else if(mPendingImg)chartImg=mPendingImg;
+  let chartPdf=existing?.chartPdf||'';if(mPendingPdf==='__CLEAR__')chartPdf='';else if(mPendingPdf)chartPdf=mPendingPdf;
+  const song={id:id||String(Date.now()),title,artist:q('m-f-artist').value.trim(),key:q('m-f-key').value,singer:q('m-f-singer').value,bpm:parseInt(q('m-f-bpm').value)||0,status:mState.selectedStatus,chart:q('m-f-chart').value,chartImg,chartPdf,requestedBy:q('m-f-requestedBy').value||'',requestNote:q('m-f-requestNote').value||'',order:existing?existing.order:shared.songs.length+1};
+  setSyncStatus('syncing');
+  const{error}=await sb.from('songs').upsert(songToDb(song));
+  if(error){showToast('Error saving song','error');setSyncStatus('error');}
+  else{if(existing){const i=shared.songs.findIndex(s=>String(s.id)===String(id));shared.songs[i]=song;}else shared.songs.push(song);setSyncStatus('live');showToast(existing?'Song updated!':'Song added!','success');}
+  mCloseSheet('m-song-sheet');mRender();
+}
+async function mDeleteSong(){if(!confirm('Delete this song?'))return;const id=mState.editSongId;const{error}=await sb.from('songs').delete().eq('id',String(id));if(!error){shared.songs=shared.songs.filter(s=>String(s.id)!==String(id));showToast('Deleted','success');}mCloseSheet('m-song-sheet');mRender();}
+
+function mOpenGigSheet(id){
+  mState.editGigId=id||null;const g=id?shared.gigs.find(x=>String(x.id)===String(id)):null;
+  q('m-gig-sheet-title').textContent=g?'Edit Gig':'Add Gig';
+  q('m-g-venue').value=g?.venue||'';q('m-g-city').value=g?.city||'';q('m-g-date').value=g?.date||'';q('m-g-time').value=g?.time||'';q('m-g-notes').value=g?.notes||'';
+  q('m-delete-gig-btn').style.display=g?'flex':'none';mOpenSheet('m-gig-sheet');
+}
+async function mSaveGig(){
+  const venue=q('m-g-venue').value.trim(),date=q('m-g-date').value;if(!venue||!date){alert('Venue and date required');return;}
+  const id=mState.editGigId;const gig={id:id||('g'+Date.now()),venue,date,city:q('m-g-city').value.trim(),time:q('m-g-time').value,notes:q('m-g-notes').value.trim()};
+  const{error}=await sb.from('gigs').upsert(gigToDb(gig));
+  if(!error){const i=shared.gigs.findIndex(g=>String(g.id)===String(gig.id));if(i>=0)shared.gigs[i]=gig;else shared.gigs.push(gig);showToast('Gig saved!','success');}
+  mCloseSheet('m-gig-sheet');mRender();
+}
+async function mDeleteGig(){if(!confirm('Delete this gig?'))return;const id=mState.editGigId;const{error}=await sb.from('gigs').delete().eq('id',String(id));if(!error){shared.gigs=shared.gigs.filter(g=>String(g.id)!==String(id));showToast('Deleted','success');}mCloseSheet('m-gig-sheet');mRender();}
+
+function mOpenMemberSheet(id){
+  mState.editMemberId=id||null;const m=id?shared.members.find(x=>String(x.id)===String(id)):null;
+  q('m-member-sheet-title').textContent=m?'Edit Member':'Add Member';
+  q('m-m-name').value=m?.name||'';q('m-m-role').value=m?.role||'';
+  q('m-delete-member-btn').style.display=(m&&shared.members.length>1)?'flex':'none';mOpenSheet('m-member-sheet');
+}
+async function mSaveMember(){
+  const name=q('m-m-name').value.trim();if(!name){alert('Name required');return;}
+  const id=mState.editMemberId;const member={id:id||('m'+Date.now()),name,role:q('m-m-role').value.trim(),order:shared.members.length+1};
+  const{error}=await sb.from('members').upsert(memberToDb(member));
+  if(!error){const i=shared.members.findIndex(m=>String(m.id)===String(member.id));if(i>=0)shared.members[i]=member;else shared.members.push(member);showToast('Member saved!','success');}
+  mCloseSheet('m-member-sheet');mRender();
+}
+async function mDeleteMember(){if(!confirm('Remove this member?'))return;const id=mState.editMemberId;const{error}=await sb.from('members').delete().eq('id',String(id));if(!error){shared.members=shared.members.filter(m=>String(m.id)!==String(id));showToast('Removed','success');}mCloseSheet('m-member-sheet');mRender();}
+
+// Mobile swipe
+let mTouchX=null,mTouchY=null;
+document.addEventListener('touchstart',e=>{mTouchX=e.touches[0].clientX;mTouchY=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(mTouchX===null)return;
+  const dx=e.changedTouches[0].clientX-mTouchX;const dy=Math.abs(e.changedTouches[0].clientY-mTouchY);
+  if(mState.view==='chords'&&Math.abs(dx)>50&&dy<60){const all=[...shared.songs.filter(s=>s.status==='setlist').sort((a,b)=>a.order-b.order),...shared.songs.filter(s=>s.status!=='setlist')];if(dx<0)mNextChord(all.length);else mPrevChord();}
+  mTouchX=null;mTouchY=null;
+},{passive:true});
+
+// ── BOOT ───────────────────────────────────────────────────────
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{renderAll();loadAll();});
+}else{renderAll();loadAll();}
+</script>
+</body>
+</html>
